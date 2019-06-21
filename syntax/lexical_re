@@ -1,0 +1,2 @@
+decimal-constant    ::= /[1-9] [0-9]+/
+integer-constant    ::= /

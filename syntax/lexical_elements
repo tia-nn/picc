@@ -1,0 +1,59 @@
+token       ::= keyword
+            |   identifier
+            |   constant
+            |   string-literal
+            |   punctuator
+
+pre-processing-token    ::= header-name
+                        |   identifier
+                        |   pp-number
+                        |   character-constant
+                        |   string-literal
+                        |   punctuator
+                        |   each non-white-space character that cannot one of the above
+
+keyword     ::= auto break case char const continue default do double else enum extern float for goto
+if inline int long register restrict return short signed sizeof static struct switch typedef union
+unsigned void volatile while _Alignas _Alignof _Atomic _Bool _Complex _Generic _Imaginary _Noreturn
+_Static_assert _Thread_local
+
+identifier      ::= identifier-nondigit
+                |   identifier identifier-nondigit
+                |   identifier digit
+
+identifier-nondigit     ::= nondigit
+                        |   universal-character-name
+                        |   other...
+
+universal-character-name    ::= \u hex-quad
+                            |   \U hex-quad
+
+hex-quad        ::= 0-f
+
+
+constant        ::= integer-constant
+                |   floating-constant
+                |   enumeration-constant
+                |   character-constant
+
+integer-constant        ::= decimal-constant integer-suffix?
+                        |   octal-constant integer-suffix?
+                        |   hexadecimal-constant integer-suffix?
+
+decimal-constant        ::= nonzero-digit digit*
+
+octal-constant          ::= 0 octal-digit*
+
+hexadecimal-constant    ::= hexadecimal-prefix hexadecimal-digit+
+
+hexadecimal-prefix      ::= 0x | 0X
+
+integer-prefix          ::= unsigned-suffix long-suffix?
+                        |   unsigned-suffix long-long-suffix
+                        |   long-suffix unsigned-suffix?
+                        |   long-long-suffix unsigned-suffix?
+
+unsigned-suffix         ::= u | U
+lung-suffix             ::= l | L
+long-long-suffix        ::= ll | LL
+

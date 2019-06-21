@@ -1,0 +1,73 @@
+
+declaration     ::= declaration-specifiers init-declarator-list? ;
+                |   static-assert-declaration
+
+init-declarator-list        ::= init-declarator
+                            |   init-declarator-list , init-declarator
+
+init-declarator             ::= declarator
+                            |   declarator = initializer
+
+declarator
+
+initializer                 ::= assignment-expression
+                            |   { initializer-list }
+                            |   { initializer-list , }
+
+
+direct-declarator           ::= identifier
+                            |   direct-declarator [ type-qualifier-list? assignment-expression? ]
+                            |   direct-declarator [ static type-qualifiers-list? assignment-expression ]
+                            |   direct-declarator [ type-qualifier-list static assignment-expression ]
+                            |   direct-declarator [ type-qualifier-list? * ]
+
+
+# tokens
+
+declaration-specifiers      ::= declaration-specifier+
+
+declaration-specifier       ::= storage-class-specifier
+                            |   type-specifier
+                            |   type-qualifier
+                            |   function-specifier
+                            |   alignment-specifier
+
+storage-class-specifier     ::= typedef
+                            |   extern
+                            |   static
+                            |   _Thread_local
+                            |   auto
+                            |   register
+
+type-specifier              ::= void
+                            |   char
+                            |   short
+                            |   int
+                            |   long
+                            |   float
+                            |   double
+                            |   signed
+                            |   unsigned
+                            |   _Bool
+                            |   _Complex
+                            |   atomic-type-specifier
+                            |   struct-or-union-specifier
+                            |   enum-specifier
+                            |   typedef-name
+
+type-qualifier              ::= const
+                            |   restrict
+                            |   volatile
+                            |   _Atomic
+
+function-specifier          ::= inline
+                            |   _Noreturn
+
+enum-specifier              ::=
+
+atomic-type-specifier       ::= _Atomic ( type-name )
+
+alignment-specifier         ::= _Alignas ( type-name )
+                            |   _Alignas ( constant-expression )
+
+
