@@ -2,8 +2,30 @@ from typing import List, Union
 from enum import Enum, auto
 from dataclasses import dataclass
 from string import whitespace, digits, ascii_letters, hexdigits, octdigits
+import sys
 
 from type import Type
+
+
+AL_ = ascii_letters + '_'
+ALNUM_ = AL_ + digits
+
+ALNUM_TOKENS = (
+    'do', 'if',
+    'for', 'int',
+    'auto', 'case', 'char', 'else', 'enum', 'goto', 'long', 'void',
+    'break', 'const', 'float', 'short', 'union', 'while',
+    'double', 'extern', 'return', 'signed', 'sizeof', 'static', 'struct', 'switch',
+    'default', 'typedef',
+    'continue', 'register', 'unsigned', 'volatile'
+)
+
+SYM_TOKENS = (
+    *('==', '!=', '<=', '>=', '++', '--',),
+    *'+-*/()=<>;{},&[]%:',
+)
+
+TOKENS = ALNUM_TOKENS+SYM_TOKENS
 
 
 class TokenizeError(Exception):
@@ -12,14 +34,15 @@ class TokenizeError(Exception):
 
 class TK(Enum):
     NUM = auto()
+    IDE = auto()
     EOF = auto()
 
 
 @dataclass
 class Token:
     ty: Union[TK, str]
-    val: Union[int, str]
-    type: Type
+    val: Union[int, str] = None
+    type: Type = None
 
 
 class Tokenizer:
@@ -46,6 +69,32 @@ class Tokenizer:
                 p += 1
                 continue
 
+            if code[p:p+2] == '//':
+                p += 2
+                while code[p] != '\n':
+                    p += 1
+                p += 1
+                continue
+
+            if code[p:p+2] == '/*':
+                p += 2
+                while code[p:p+2] != '*/':
+                    p += 1
+                p += 2
+                continue
+
+            f = False
+            for token in TOKENS:
+                t_len = len(token)
+                if code[p:p + t_len] == token and (token[-1] not in ALNUM_ or code[p+t_len] not in ALNUM_):
+                    tokens.append(Token(token))
+                    p += t_len
+                    f = True
+                    break
+            if f:
+                continue
+
+            # 定数式
             if code[p] in digits:
                 if code[p:p+2] in ('0x', '0X'):
                     """ hex constant """
@@ -98,9 +147,15 @@ class Tokenizer:
                 tokens.append(Token(TK.NUM, val=d, type=t))
                 continue
 
-            print(code[p:])
+            if code[p] in AL_:  # todo: http://port70.net/~nsz/c/c11/n1570.html#6.4.3
+                t = self.get_any(code[p:], ascii_letters+digits+'_')
+                tokens.append(Token(TK.IDE, val=t))
+                p += len(t)
+                continue
+
+            sys.stderr.write(code[p:]+'\n')
             raise TokenizeError
-        tokens.append(Token(TK.EOF, None, None))
+        tokens.append(Token(TK.EOF))
         return tokens
 
 
@@ -112,16 +167,7 @@ if __name__ == '__main__':
         if argv[1] == 'test':
             t = Tokenizer()
             codes = (
-                '123',
-                '0123',
-                '0x123',
-                '123u',
-                '123uL',
-                '123ULL',
-                '123l',
-                '123lu',
-                '123LLU',
-                '123LL',
+                '++aa',
             )
 
             for code in codes:
