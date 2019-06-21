@@ -34,11 +34,19 @@ if __name__ == '__main__':
         sys.stderr.write('usage: python picc.py [filename]')
         sys.exit(1)
 
-    main()
-
-    if len(sys.argv) == 3 and sys.argv[2] == 'test':
+    if sys.argv[1] == 'test':
         import subprocess
-        subprocess.run('gcc -o a a.s'.split())
-        a = subprocess.run('./a').returncode
-        print('\n => ret:', a)
+        for case in open('test.picc'):
+            code, res = case.split('$')
+            res = int(res)
+            main(code)
+            subprocess.run('gcc -o a a.s'.split())
+            a = subprocess.run('./a').returncode
+            if a == res:
+                print('ok:', code, '=>', a)
+            else:
+                print('ng:', code, '=>', a)
+                print('  should get:', res)
         exit(0)
+
+    main()
