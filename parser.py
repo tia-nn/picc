@@ -1,9 +1,19 @@
-from typing import List, Union
+from typing import List, Union, Dict
 from dataclasses import dataclass
 from enum import Enum, auto
+from collections import deque
 
 from type import Type
 from tokenizer import TK, Token
+from utils import debug
+
+
+TYPES = 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
+STORAGE_CLASS_SPECIFIER = 'typedef', 'extern', 'static', '_Thread_local', 'auto', 'register'
+TYPE_SPECIFIER = 'void', 'char', 'short', 'int', 'long', 'float', 'double', \
+                 'signed', 'unsigned', '_Bool', '_Complex'
+TYPE_QUALIFIER = 'const', 'register', 'volatile', '_Atomic'
+FUNCTION_SPECIFIER = 'inline', '_Noreturn'
 
 
 class ParseError(Exception):
@@ -12,6 +22,8 @@ class ParseError(Exception):
 
 class ND(Enum):
     INT = auto()
+    IDE = auto()
+    DECL = auto()
 
 
 @dataclass
@@ -32,6 +44,10 @@ n_signed_int_0 = Node(ND.INT, type=t_signed_int, val=0)
 class ParseUtils:
     p: int
     tokens: List[Token]
+    variables: Dict[str, Type]
+    offset: Dict[str, int]
+
+    # utils
 
     def pos(self):
         ret = self.tokens[self.p]
@@ -53,30 +69,32 @@ class ParseUtils:
     def consume_must(self, ty):
         if self.next_is(ty):
             return self.pos()
-        return ParseError
+        raise ParseError
 
     @staticmethod
     def caller(*methods):
         for method in methods:
-            if (ret := method()) != ParseError:
-                return ret
-        return ParseError
+            try:
+                return method()
+            except ParseError:
+                pass
+        raise ParseError
 
     def token_consumer(self, tokens):
         if self.next_in(tokens):
             return self.pos().ty
-        return ParseError
+        raise ParseError
 
     @staticmethod
     def repeat(method, allow_null=True):
         ret = []
         while True:
-            if (m := method()) != ParseError:
+            try:
                 ret.append(method())
-            else:
-                continue
+            except ParseError:
+                break
         if not allow_null and not ret:
-            return ParseError
+            raise ParseError
         return ret
 
     @staticmethod
@@ -86,37 +104,144 @@ class ParseUtils:
         except ParseError:
             return None
 
+    # sub parser
 
-class Parser(ParseUtils):
-    p: int
-    tokens: List[Token]
+    @staticmethod
+    def make_type(decl_specs):
+        t = Type(None)
+        types = deque()
 
-    def parse(self, tokens):
-        self.p = 0
-        nodes = []
-        self.tokens = tokens
-        while not self.consume(TK.EOF):
-            nodes.append(self.expression())
-        return nodes
+        not_arithmetic = False
+        short = False
+        long = False
+        long2 = False
+        ty = None
 
+        for s in decl_specs:
+            if s in ('signed', 'unsigned'):
+                if t.signed is not None:
+                    raise ParseError('signed, unsignedが複数指定されています')
+                t.signed = s == 'signed'
+                continue
+            if s == '_Thread_local':
+                if t.thread_local is not None:
+                    raise ParseError('_Thread_localが複数あります')
+                t.thread_local = True
+                continue
+            if s == 'const':
+                if t.const is not None:
+                    raise ParseError('constが複数あります')
+                t.const = True
+                continue
+            if s == 'restrict':
+                if t.restrict is not None:
+                    raise ParseError('restrictが複数あります')
+                t.restrict = True
+                continue
+            if s == 'volatile':
+                if t.volatile is not None:
+                    raise ParseError('volatileが複数あります')
+                t.volatile = True
+                continue
+            if s == '_Atomic':
+                if t.atomic is not None:
+                    raise ParseError('_Atomicが複数あります')
+                t.atomic = True
+                continue
+            if s == 'inline':
+                if t.inline is not None:
+                    raise ParseError('inlineが複数あります')
+                t.inline = True
+                continue
+            if s == '_Noreturn':
+                if t.noreturn is not None:
+                    raise ParseError('_Noreturnが複数あります')
+                t.noreturn = True
+                continue
+            if s is STORAGE_CLASS_SPECIFIER:
+                if t.storage_class is not None:
+                    raise ParseError('記憶域クラス指定子が複数指定されています')
+                t.storage_class = s
+                continue
+            if s in TYPE_SPECIFIER:
+                if s in ('void', 'char', ):
+                    t.ty = s
+                    not_arithmetic = True
+                    continue
+                if s == 'long':
+                    if long:
+                        if long2:
+                            raise ParseError('longが3つ以上指定されています')
+                        long2 = True
+                        continue
+                    long = True
+                    continue
+                if s == 'short':
+                    if short:
+                        raise ParseError('shortが複数指定されています')
+                    short = True
+                    continue
+                if ty is not None:
+                    raise ParseError('型が複数指定されています')
+                ty = s
+                continue
+            raise ParseError('error1')
+
+        if not_arithmetic and (long or short):
+            raise ParseError('非算術型にlong|shortを指定しています')
+        if long and short:
+            raise ParseError('longとshortが同時に指定されています')
+
+        if not long and not short:
+            t.ty = 'int'
+            return t
+
+        if short:
+            t.ty = 'short'
+            return t
+
+        if long2:
+            t.ty = 'long long'
+            return t
+
+        if long:
+            t.ty = 'long'
+            return t
+
+        raise ParseError('error2')
+
+
+class TokenParser(ParseUtils):
     # lexical-element
 
     def constant(self):
         if self.next_is(TK.NUM):
             t = self.pos()
             return Node(ND.INT, type=t.type, val=t.val)
-        return ParseError
+        if self.next_is(TK.IDE):
+            t = self.pos()
+            return Node(ND.IDE, type=self.variables[t.val], val=t.val)
+        raise ParseError
 
+    def identifier(self):
+        if self.next_is(TK.IDE):
+            return self.pos().val
+        raise ParseError
+
+
+class ExpressionParser(TokenParser):
     # expression
 
     def primary_expression(self):
-        if (c := self.constant()) != ParseError:
-            return c
+        try:
+            return self.constant()
+        except ParseError:
+            pass
         if self.consume('('):
             expression = self.expression()
             self.consume_must(')')
             return expression
-        return ParseError
+        raise ParseError
 
     def postfix_expression(self):
         postfix = self.primary_expression()
@@ -127,6 +252,8 @@ class Parser(ParseUtils):
         return postfix
 
     def unary_expression(self):
+        unary = None
+
         while True:
             if self.consume('+'):
                 unary = self.cast_expression()
@@ -143,9 +270,10 @@ class Parser(ParseUtils):
                 node = self.cast_expression()
                 unary = Node('==', type=t_signed_int, lhs=node, rhs=n_signed_int_0)
                 continue
-            unary = self.postfix_expression()
             break
 
+        if unary is None:
+            unary = self.postfix_expression()
         return unary
 
     def cast_expression(self):
@@ -357,6 +485,8 @@ class Parser(ParseUtils):
         assign = self.conditional_expression()
 
         while True:
+            if self.consume('='):
+                assign = Node('=', type=assign.type, lhs=assign, rhs=self.assignment_expression())
             break
 
         return assign
@@ -377,6 +507,213 @@ class Parser(ParseUtils):
         return self.conditional_expression()
 
 
+class DeclarationParser(ExpressionParser):
+    # declaration
+
+    def declaration(self):
+        return self.caller(
+            self._declaration_1,
+            self._declaration_2
+        )
+
+    def _declaration_1(self):
+        declaration_specifiers = self.declaration_specifiers()
+        init_declarator_list = self.select(self.init_declaration_list)
+        if init_declarator_list is None: init_declarator_list = []
+        self.consume_must(';')
+        t = self.make_type(declaration_specifiers)
+
+        for i in init_declarator_list:
+            self.variables[i] = t
+            self.offset[i] = max(self.offset.values() or [0]) + t.size
+
+        return Node(ND.DECL, type=t, val=init_declarator_list)
+
+    def _declaration_2(self):
+        raise ParseError
+
+    def init_declaration_list(self):
+        init_declarator_list = [self.init_declarator()]
+
+        while True:
+            if self.consume(','):
+                init_declarator_list.append(self.init_declarator())
+                continue
+            break
+
+        return init_declarator_list
+
+    def init_declarator(self):
+        declarator = self.declarator()
+        """
+        if self.consume('='):
+            initializer = self.initializer()
+        """
+        return declarator
+
+    def declarator(self):
+        try:
+            pointer = self.pointer()
+        except ParseError:
+            pointer = None
+        direct_declarator = self.direct_declarator()
+        return direct_declarator
+
+    def direct_declarator(self):
+        direct_declarator = None
+
+        try:
+            direct_declarator = self.identifier()
+        except ParseError:
+            pass
+
+        while True:
+            break
+
+        if direct_declarator is None:
+            raise ParseError
+
+        return direct_declarator
+
+    def pointer(self):
+        raise ParseError
+
+    """
+
+    def direct_abstract_declarator(self):
+        direct_abstract_declarator = None
+        if self.consume('('):
+            direct_abstract_declarator = self.abstract_declarator()
+            self.consume_must(')')
+
+        while True:
+            break
+
+        if direct_abstract_declarator is None:
+            raise ParseError
+
+        return direct_abstract_declarator
+
+    def initializer(self):
+        try:
+            return self.assignment_expression()
+        except ParseError:
+            pass
+        if self.consume('{'):
+            initializer_list = self.initializer_list()
+            self.consume(',')
+            self.consume_must('}')
+            return initializer_list
+
+        raise ParseError
+
+    def initializer_list(self):
+        initializer_list = [self._initializer_list()]
+
+        while True:
+            try:
+                initializer_list.append(self._initializer_list())
+            except ParseError:
+                break
+
+        return initializer_list
+
+    def _initializer_list(self):
+        try:
+            designation = self.designation()
+        except ParseError:
+            designation = None
+
+        initializer = self.initializer()
+
+        return designation, initializer
+
+    def designation(self):
+        designator_list = self.designator_list()
+        self.consume_must('=')
+        return designator_list
+
+    def designator_list(self):
+        designator_list = [self.designator()]
+
+        while True:
+            try:
+                designator_list.append(self.designator())
+            except ParseError:
+                break
+
+        return designator_list
+
+    def designator(self):
+        if self.consume('['):
+            constant_expression = self.constant_expression()
+            self.consume_must(']')
+            #todo
+            return
+        if self.consume('.'):
+            return self.identifier()
+        raise ParseError
+
+    """
+
+    def declaration_specifiers(self):
+        return self.repeat(self.declaration_specifier, False)
+
+    def declaration_specifier(self):
+        return self.caller(
+            self.storage_class_specifier,
+            self.type_specifier,
+            self.type_qualifier,
+            self.function_specifier,
+
+        )
+
+    def storage_class_specifier(self):
+        return self.token_consumer(STORAGE_CLASS_SPECIFIER)
+
+    def type_specifier(self):
+        return self.token_consumer(TYPE_SPECIFIER)
+        # TODO: atomic, struct, enum, typedef
+
+    def type_qualifier(self):
+        return self.token_consumer(TYPE_QUALIFIER)
+
+    def function_specifier(self):
+        return self.token_consumer(FUNCTION_SPECIFIER)
+
+
+class StatementParser(DeclarationParser):
+    def statement(self):
+        try:
+            statement = self.expression()
+        except ParseError:
+            pass
+        else:
+            self.consume_must(';')
+            return statement
+        try:
+            statement = self.declaration()
+        except ParseError:
+            pass
+        else:
+            return statement
+
+        raise ParseError
+
+
+class Parser(StatementParser):
+
+    def parse(self, tokens):
+        self.p = 0
+        nodes = []
+        self.variables = {}
+        self.offset = {}
+        self.tokens = tokens
+        while not self.consume(TK.EOF):
+            nodes.append(self.statement())
+        return nodes
+
+
 if __name__ == '__main__':
     from sys import argv
     from tokenizer import Tokenizer
@@ -386,7 +723,7 @@ if __name__ == '__main__':
     if argc > 1:
         if argv[1] == 'test':
             t = Tokenizer()
-            tokens = t.tokenize('1 + 2 * 3 & 4')
+            tokens = t.tokenize('3u * -7')
             print(tokens)
             p = Parser()
             nodes = p.parse(tokens)

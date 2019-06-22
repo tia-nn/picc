@@ -104,7 +104,6 @@ class Tokenizer:
                     p += len(h)
                 elif code[p] == '0':
                     """ oct constant """
-                    p += 1
                     o = self.get_any(code[p:], octdigits)
                     d = int(o, 8)
                     p += len(o)

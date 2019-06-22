@@ -20,8 +20,8 @@ def main(code=None):
     sys.stdout = open('a.s', 'w')
 
     tokens = t.tokenize(code)
-    nodes  = p.parse(tokens)
-    g.generate(nodes)
+    nodes = p.parse(tokens)
+    g.generate(nodes, p.offset)
 
     sys.stdout = tmp
 

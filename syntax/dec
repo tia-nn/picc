@@ -1,0 +1,166 @@
+declaration:
+                 declaration-specifiers init-declarator-list? ;
+                 static_assert-declaration
+          declaration-specifiers:
+                 storage-class-specifier declaration-specifiersopt
+                 type-specifier declaration-specifiersopt
+                 type-qualifier declaration-specifiersopt
+                 function-specifier declaration-specifiersopt
+                 alignment-specifier declaration-specifiersopt
+          init-declarator-list:
+                  init-declarator
+                  init-declarator-list , init-declarator
+          init-declarator:
+                  declarator
+                  declarator = initializer
+
+storage-class-specifier:
+                 typedef
+                 extern
+                 static
+                 _Thread_local
+                 auto
+                 register
+
+type-specifier:
+                 void
+                 char
+                 short
+                 int
+                 long
+                 float
+                 double
+                 signed
+                 unsigned
+                 _Bool
+                 _Complex
+                 atomic-type-specifier
+                 struct-or-union-specifier
+                 enum-specifier
+                 typedef-name
+
+struct-or-union-specifier:
+                  struct-or-union identifieropt { struct-declaration-list }
+                  struct-or-union identifier
+         struct-or-union:
+                 struct
+                 union
+         struct-declaration-list:
+                 struct-declaration
+                 struct-declaration-list struct-declaration
+         struct-declaration:
+                 specifier-qualifier-list struct-declarator-listopt ;
+                 static_assert-declaration
+         specifier-qualifier-list:
+                type-specifier specifier-qualifier-listopt
+                type-qualifier specifier-qualifier-listopt
+         struct-declarator-list:
+                 struct-declarator
+                 struct-declarator-list , struct-declarator
+         struct-declarator:
+                 declarator
+                 declaratoropt : constant-expression
+
+enum-specifier:
+                enum identifieropt { enumerator-list }
+                enum identifieropt { enumerator-list , }
+                enum identifier
+          enumerator-list:
+                enumerator
+                enumerator-list , enumerator
+          enumerator:
+                enumeration-constant
+                enumeration-constant = constant-expression
+
+atomic-type-specifier:
+                 _Atomic ( type-name )
+
+type-qualifier:
+                 const
+                 restrict
+                 volatile
+                 _Atomic
+
+function-specifier:
+                 inline
+                 _Noreturn
+
+alignment-specifier:
+                _Alignas ( type-name )
+                _Alignas ( constant-expression )
+
+declarator:
+                 pointer? direct-declarator
+          direct-declarator:
+                  identifier
+                  ( declarator )
+                  direct-declarator [ type-qualifier-listopt assignment-expressionopt ]
+                  direct-declarator [ static type-qualifier-listopt assignment-expression ]
+                  direct-declarator [ type-qualifier-list static assignment-expression ]
+                  direct-declarator [ type-qualifier-listopt * ]
+                  direct-declarator ( parameter-type-list )
+                  direct-declarator ( identifier-listopt )
+          pointer:
+                 * type-qualifier-listopt
+                 * type-qualifier-listopt pointer
+          type-qualifier-list:
+                 type-qualifier
+                 type-qualifier-list type-qualifier
+          parameter-type-list:
+                parameter-list
+                parameter-list , ...
+          parameter-list:
+                parameter-declaration
+                parameter-list , parameter-declaration
+          parameter-declaration:
+                declaration-specifiers declarator
+                declaration-specifiers abstract-declaratoropt
+          identifier-list:
+                 identifier
+                 identifier-list , identifier
+
+type-name:
+                 specifier-qualifier-list abstract-declaratoropt
+          abstract-declarator:
+                 pointer
+                 pointer? direct-abstract-declarator
+          direct-abstract-declarator:
+                  ( abstract-declarator )
+                  direct-abstract-declarator? [ type-qualifier-list? assignment-expression? ]
+                  direct-abstract-declarator? [ static type-qualifier-list? assignment-expression ]
+                  direct-abstract-declarator? [ type-qualifier-list static assignment-expression ]
+                  direct-abstract-declarator? [ * ]
+                  direct-abstract-declarator? ( parameter-type-list? )
+
+typedef-name:
+                 identifier
+
+initializer:
+                   assignment-expression
+                   { initializer-list }
+                   { initializer-list , }
+          initializer-list:
+                   designation? initializer
+                   initializer-list , designation? initializer
+          designation:
+                 designator-list =
+          designator-list:
+                 designator
+                 designator-list designator
+          designator:
+                 [ constant-expression ]
+                 . identifier
+
+static_assert-declaration:
+                  _Static_assert ( constant-expression , string-literal ) ;
+
+
+
+
+
+
+
+
+
+
+

@@ -13,6 +13,18 @@ ARITHMETIC_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
 INTEGER_TYPE = 'short', 'int', 'long', 'long long'
 REAL_NUMBER_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
 
+TYPE_SIZE = {
+    '.ptr': 8,
+    'void': 0,
+    'char': 1,
+    'short': 4,
+    'int': 4,
+    'long': 8,
+    'long long': 16,
+    'float': 8,
+    'double': 16,
+}
+
 
 @dataclass
 class Type:
@@ -49,6 +61,10 @@ class Type:
     @staticmethod
     def both_real_num(a: 'Type', b: 'Type'):
         return a.is_real_num() and b.is_real_num()
+
+    @property
+    def size(self):
+        return TYPE_SIZE[self.ty]
 
     def __repr__(self):
         fs = ('ty', 'signed', 'ptr_to', 'array_size', 'storage_class', 'thread_local',
