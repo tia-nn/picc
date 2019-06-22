@@ -12,7 +12,7 @@ TYPES = 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', 
 STORAGE_CLASS_SPECIFIER = 'typedef', 'extern', 'static', '_Thread_local', 'auto', 'register'
 TYPE_SPECIFIER = 'void', 'char', 'short', 'int', 'long', 'float', 'double', \
                  'signed', 'unsigned', '_Bool', '_Complex'
-TYPE_QUALIFIER = 'const', 'register', 'volatile', '_Atomic'
+TYPE_QUALIFIER = 'const', 'restrict', 'volatile', '_Atomic'
 FUNCTION_SPECIFIER = 'inline', '_Noreturn'
 
 
@@ -158,7 +158,7 @@ class ParseUtils:
                     raise ParseError('_Noreturnが複数あります')
                 t.noreturn = True
                 continue
-            if s is STORAGE_CLASS_SPECIFIER:
+            if s in STORAGE_CLASS_SPECIFIER:
                 if t.storage_class is not None:
                     raise ParseError('記憶域クラス指定子が複数指定されています')
                 t.storage_class = s
@@ -185,12 +185,12 @@ class ParseUtils:
                     raise ParseError('型が複数指定されています')
                 ty = s
                 continue
-            raise ParseError('error1')
+            raise TypeError('error1')
 
         if not_arithmetic and (long or short):
             raise ParseError('非算術型にlong|shortを指定しています')
         if long and short:
-            raise ParseError('longとshortが同時に指定されています')
+            raise TypeError('longとshortが同時に指定されています')
 
         if not long and not short:
             t.ty = 'int'
@@ -208,7 +208,7 @@ class ParseUtils:
             t.ty = 'long'
             return t
 
-        raise ParseError('error2')
+        raise TypeError('error2')
 
 
 class TokenParser(ParseUtils):
