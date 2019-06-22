@@ -71,7 +71,12 @@ class Tokenizer:
 
             if code[p:p+2] == '//':
                 p += 2
-                while code[p] != '\n':
+                while True:
+                    if code[p:p+2] == '\\\n':
+                        p += 2
+                        continue
+                    if code[p] != '\n':
+                        break
                     p += 1
                 p += 1
                 continue
