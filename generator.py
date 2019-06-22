@@ -15,7 +15,7 @@ class Generator:
 
     def gen(self, node: Node):
 
-        if node.ty == ND.constant:
+        if node.ty == ND.INT:
             if node.type.ty in ('int', 'long', 'long long'):  # 整数
                 print('  push', node.val)
                 return
