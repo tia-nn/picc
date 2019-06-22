@@ -23,6 +23,12 @@ class Node:
     rhs: 'Node' = None
 
 
+t_signed_int = Type('int', signed=True)
+n_signed_int_plus1 = Node(ND.INT, type=t_signed_int, val=1)
+n_signed_int_minus1 = Node(ND.INT, type=t_signed_int, val=-1)
+n_signed_int_0 = Node(ND.INT, type=t_signed_int, val=0)
+
+
 class ParseUtils:
     p: int
     tokens: List[Token]
@@ -90,7 +96,7 @@ class Parser(ParseUtils):
         nodes = []
         self.tokens = tokens
         while not self.consume(TK.EOF):
-            nodes.append(self.constant())
+            nodes.append(self.expression())
         return nodes
 
     # lexical-element
@@ -121,15 +127,23 @@ class Parser(ParseUtils):
         return postfix
 
     def unary_expression(self):
-        unary = self.postfix_expression()
-
         while True:
             if self.consume('+'):
-                pass
+                unary = self.cast_expression()
+                if not unary.type.is_arithmetic():
+                    raise ParseError('単行+に非算術型が指定されています')
+                continue
             if self.consume('-'):
-                unary = Node('*', type=unary.type, lhs=unary, rhs=Node(ND.INT, type=Type('int', signed=True), val=-1))
+                node = self.cast_expression()
+                if not node.type.is_arithmetic():
+                    raise ParseError('単行-に非算術型が指定されています')
+                unary = Node('*', type=node.type, lhs=node, rhs=n_signed_int_minus1)
+                continue
             if self.consume('!'):
-                unary = Node('!', type=unary.type, lhs=unary)
+                node = self.cast_expression()
+                unary = Node('==', type=t_signed_int, lhs=node, rhs=n_signed_int_0)
+                continue
+            unary = self.postfix_expression()
             break
 
         return unary
@@ -147,13 +161,22 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('*'):
-                mul = Node('*', type=mul.type, lhs=mul, rhs=self.cast_expression())
+                rhs = self.cast_expression()
+                if not mul.type.is_arithmetic() or not rhs.type.is_arithmetic():
+                    raise ParseError('乗法演算子*に算術型以外が指定されています')
+                mul = Node('*', type=mul.type, lhs=mul, rhs=rhs)
                 continue
             if self.consume('/'):
-                mul = Node('/', type=mul.type, lhs=mul, rhs=self.cast_expression())
+                rhs = self.cast_expression()
+                if not mul.type.is_arithmetic() or not rhs.type.is_arithmetic():
+                    raise ParseError('除法演算子/に算術型以外が指定されています')
+                mul = Node('/', type=mul.type, lhs=mul, rhs=rhs)
                 continue
             if self.consume('%'):
-                mul = Node('%', type=mul.type, lhs=mul, rhs=self.cast_expression())
+                rhs = self.cast_expression()
+                if not mul.type.is_integer() or not rhs.type.is_integer():
+                    raise ParseError('剰余演算子%に整数型以外が指定されています')
+                mul = Node('%', type=mul.type, lhs=mul, rhs=rhs)
                 continue
             break
 
@@ -164,10 +187,17 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('+'):
-                add = Node('+', type=add.type, lhs=add, rhs=self.multiple_expression())
+                rhs = self.multiple_expression()
+                # TODO: 片方がポインタならもう片方は整数型 http://port70.net/~nsz/c/c11/n1570.html#6.5.6p2
+                if not Type.both_arithmetic(add.type, rhs.type):
+                    raise ParseError('加算+に算術型以外が指定されています')
+                add = Node('+', type=add.type, lhs=add, rhs=rhs)
                 continue
             if self.consume('-'):
-                add = Node('-', type=add.type, lhs=add, rhs=self.multiple_expression())
+                rhs = self.multiple_expression()
+                if not Type.both_arithmetic(add.type, rhs.type):
+                    raise ParseError('減算-に算術型以外が指定されています')
+                add = Node('-', type=add.type, lhs=add, rhs=rhs)
                 continue
             break
 
@@ -178,10 +208,16 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('>>'):
-                shift = Node('>>', type=shift.type, lhs=shift, rhs=self.additive_expression())
+                rhs = self.additive_expression()
+                if not Type.both_integer(shift.type, rhs.type):
+                    raise ParseError('右シフト演算子>>に整数型以外が指定されています')
+                shift = Node('>>', type=shift.type, lhs=shift, rhs=rhs)
                 continue
             if self.consume('<<'):
-                shift = Node('<<', type=shift.type, lhs=shift, rhs=self.additive_expression())
+                rhs = self.additive_expression()
+                if not Type.both_integer(shift.type, rhs.type):
+                    raise ParseError('左シフト演算子<<に整数型以外が指定されています')
+                shift = Node('<<', type=shift.type, lhs=shift, rhs=rhs)
                 continue
             break
 
@@ -190,18 +226,30 @@ class Parser(ParseUtils):
     def relational_expression(self):
         relational = self.shift_expression()
 
-        while True:
+        while True:  # todo: http://port70.net/~nsz/c/c11/n1570.html#6.5.8p2  2番目の制約
             if self.consume('<'):
-                relational = Node('<', type=relational.type, lhs=relational, rhs=self.shift_expression())
+                rhs = self.shift_expression()
+                if not Type.both_real_num(relational.type, rhs.type):
+                    raise ParseError('比較演算子<に実数型以外が指定されています')
+                relational = Node('<', type=t_signed_int, lhs=relational, rhs=rhs)
                 continue
             if self.consume('>'):
-                relational = Node('<', type=relational.type, rhs=relational, lhs=self.shift_expression())
+                rhs = self.shift_expression()
+                if not Type.both_real_num(relational.type, rhs.type):
+                    raise ParseError('比較演算子>に実数型以外が指定されています')
+                relational = Node('<', type=t_signed_int, rhs=relational, lhs=rhs)
                 continue
             if self.consume('<='):
-                relational = Node('<=', type=relational.type, lhs=relational, rhs=self.shift_expression())
+                rhs = self.shift_expression()
+                if not Type.both_real_num(relational.type, rhs.type):
+                    raise ParseError('比較演算子<=に実数型以外が指定されています')
+                relational = Node('<=', type=t_signed_int, lhs=relational, rhs=rhs)
                 continue
             if self.consume('>='):
-                relational = Node('<=', type=relational.type, rhs=relational, lhs=self.shift_expression())
+                rhs = self.shift_expression()
+                if not Type.both_real_num(relational.type, rhs.type):
+                    raise ParseError('比較演算子>=に実数型以外が指定されています')
+                relational = Node('<=', type=t_signed_int, rhs=relational, lhs=rhs)
                 continue
             break
 
@@ -212,10 +260,16 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('=='):
-                equality = Node('==', type=equality.type, lhs=equality, rhs=self.relational_expression())
+                rhs = self.relational_expression()
+                if not Type.both_arithmetic(equality.type, rhs.type):
+                    raise ParseError('比較演算子==に算術型以外が指定されています')
+                equality = Node('==', type=t_signed_int, lhs=equality, rhs=rhs)
                 continue
             if self.consume('!='):
-                equality = Node('!=', type=equality.type, lhs=equality, rhs=self.relational_expression())
+                rhs = self.relational_expression()
+                if not Type.both_arithmetic(equality.type, rhs.type):
+                    raise ParseError('比較演算子!=に算術型以外が指定されています')
+                equality = Node('!=', type=t_signed_int, lhs=equality, rhs=rhs)
                 continue
             break
 
@@ -226,7 +280,10 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('&'):
-                and_ = Node('&', type=and_.type, lhs=and_, rhs=self.equality_expression())
+                rhs = self.equality_expression()
+                if not Type.both_integer(and_.type, rhs.type):
+                    raise ParseError('&演算子に整数型以外が指定されています')
+                and_ = Node('&', type=and_.type, lhs=and_, rhs=rhs)
                 continue
             break
 
@@ -237,7 +294,10 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('^'):
-                xor = Node('^', type=xor.type, lhs=xor, rhs=self.and_expression())
+                rhs = self.and_expression()
+                if not Type.both_integer(xor.type, rhs.type):
+                    raise ParseError('^演算子に整数型以外が指定されています')
+                xor = Node('^', type=xor.type, lhs=xor, rhs=rhs)
                 continue
             break
 
@@ -248,7 +308,10 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('|'):
-                or_ = Node('|', type=or_.type, lhs=or_, rhs=self.exclusive_or_expression())
+                rhs = self.exclusive_or_expression()
+                if not Type.both_integer(or_.type, rhs.type):
+                    raise ParseError('|演算子に整数型以外が指定されています')
+                or_ = Node('|', type=or_.type, lhs=or_, rhs=rhs)
                 continue
             break
 
@@ -259,7 +322,10 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('&&'):
-                land = Node('&&', type=land.type, lhs=land, rhs=self.or_expression())
+                rhs = self.or_expression()
+                if not Type.both_integer(land.type, rhs.type):  # TODO: integerじゃなくてscala...
+                    raise ParseError('&&演算子に整数型以外が指定されています')
+                land = Node('&&', type=land.type, lhs=land, rhs=rhs)
                 continue
             break
 
@@ -270,7 +336,10 @@ class Parser(ParseUtils):
 
         while True:
             if self.consume('||'):
-                lor = Node('||', type=lor.type, lhs=lor, rhs=self.logical_and_expression())
+                rhs = self.logical_and_expression()
+                if not Type.both_integer(lor.type, rhs.type):
+                    raise ParseError('||演算子に整数型以外が指定されています')
+                lor = Node('||', type=lor.type, lhs=lor, rhs=rhs)
                 continue
             break
 
@@ -293,17 +362,18 @@ class Parser(ParseUtils):
         return assign
 
     def expression(self):
-        exp = [self.assignment_expression()]
+        exp = self.assignment_expression()
 
         while True:
             if self.consume(','):
-                exp = exp.append(self.assignment_expression())
+                rhs = self.assignment_expression()
+                exp = Node(',', type=rhs.type, lhs=exp, rhs=rhs)
                 continue
             break
 
         return exp
 
-    def constant_expression(self):
+    def constant_expression(self):  # TODO: http://port70.net/~nsz/c/c11/n1570.html#6.6
         return self.conditional_expression()
 
 
@@ -316,7 +386,8 @@ if __name__ == '__main__':
     if argc > 1:
         if argv[1] == 'test':
             t = Tokenizer()
-            tokens = t.tokenize('0xff')
+            tokens = t.tokenize('1 + 2 * 3 & 4')
+            print(tokens)
             p = Parser()
             nodes = p.parse(tokens)
             print(nodes)

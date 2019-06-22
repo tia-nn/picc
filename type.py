@@ -2,12 +2,16 @@ from typing import List
 from dataclasses import dataclass
 from enum import Enum, auto
 
-TYPES = 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
+TYPES = '.ptr', 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
 STORAGE_CLASS_SPECIFIER = 'typedef', 'extern', 'static', '_Thread_local', 'auto', 'register'
 TYPE_SPECIFIER = 'void', 'char', 'short', 'int', 'long', 'float', 'double', \
                  'signed', 'unsigned', '_Bool', '_Complex'
 TYPE_QUALIFIER = 'const', 'register', 'volatile', '_Atomic'
 FUNCTION_SPECIFIER = 'inline', '_Noreturn'
+
+ARITHMETIC_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
+INTEGER_TYPE = 'short', 'int', 'long', 'long long'
+REAL_NUMBER_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
 
 
 @dataclass
@@ -24,6 +28,27 @@ class Type:
     atomic: bool = None
     inline: bool = None
     noreturn: bool = None
+
+    def is_arithmetic(self):
+        return self.ty in ARITHMETIC_TYPE
+
+    def is_integer(self):
+        return self.ty in INTEGER_TYPE
+
+    def is_real_num(self):
+        return self.ty in REAL_NUMBER_TYPE
+
+    @staticmethod
+    def both_arithmetic(a: 'Type', b: 'Type'):
+        return a.is_arithmetic() and b.is_arithmetic()
+
+    @staticmethod
+    def both_integer(a: 'Type', b: 'Type'):
+        return a.is_integer() and b.is_integer()
+
+    @staticmethod
+    def both_real_num(a: 'Type', b: 'Type'):
+        return a.is_real_num() and b.is_real_num()
 
     def __repr__(self):
         fs = ('ty', 'signed', 'ptr_to', 'array_size', 'storage_class', 'thread_local',
