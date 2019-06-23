@@ -1,6 +1,7 @@
 from typing import List, Dict
 
 from parser import Node, ND
+from utils import debug
 
 
 SIZE_NAME = {
@@ -51,6 +52,9 @@ class Generator:
             return
 
         if node.ty == ND.DECL:
+            for i in node.d_init_list:
+                self.gen(i)
+                print('  pop rax')
             print('  push 0  # decl statement')
             return
 

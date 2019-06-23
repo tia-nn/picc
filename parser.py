@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 from dataclasses import dataclass
 from enum import Enum, auto
 from collections import deque
@@ -33,6 +33,7 @@ class Node:
     val: Union[int, str] = None
     lhs: 'Node' = None
     rhs: 'Node' = None
+    d_init_list: List['Node'] = None
 
 
 t_signed_int = Type('int', signed=True)
@@ -559,38 +560,45 @@ class DeclarationParser(ExpressionParser):
 
     def _declaration_1(self):
         declaration_specifiers = self.declaration_specifiers()
-        init_declarator_list = self.select(self.init_declaration_list)
-        if init_declarator_list is None: init_declarator_list = []
-        self.consume_must(';')
         t = self.make_type(declaration_specifiers)
+        init_declarator_list = self.select(lambda: self.init_declarator_list(t))
+        if init_declarator_list is None:
+            init_declarator_list = []
+        self.consume_must(';')
 
-        for i in init_declarator_list:
-            self.variables[i] = t
-            self.offset[i] = max(self.offset.values() or [0]) + t.size
+        init_list = []
+        for name, init in init_declarator_list:
+            if init is not None:
+                init_list.append(Node('=', type=t, lhs=Node(ND.IDE, type=t, val=name), rhs=init[0]))
 
-        return Node(ND.DECL, type=t, val=init_declarator_list)
+        return Node(ND.DECL, type=t, val=init_declarator_list, d_init_list=init_list)
 
     def _declaration_2(self):
         raise ParseError
 
-    def init_declaration_list(self):
-        init_declarator_list = [self.init_declarator()]
+    def init_declarator_list(self, t):
+        init_declarator_list = [self.init_declarator(t)]
 
         while True:
             if self.consume(','):
-                init_declarator_list.append(self.init_declarator())
+                init_declarator_list.append(self.init_declarator(t))
                 continue
             break
 
         return init_declarator_list
 
-    def init_declarator(self):
+    def init_declarator(self, t) -> Tuple[Union[int, str], List[Node]]:
         declarator = self.declarator()
-        """
+
+        initializer = None
         if self.consume('='):
             initializer = self.initializer()
-        """
-        return declarator
+
+        # 内部的変数宣言
+        self.variables[declarator] = t
+        self.offset[declarator] = max(self.offset.values() or [0]) + t.size
+
+        return declarator, initializer
 
     def declarator(self):
         try:
@@ -615,6 +623,14 @@ class DeclarationParser(ExpressionParser):
             raise ParseError
 
         return direct_declarator
+
+    def initializer(self):
+        if self.consume('{'):
+            pass
+
+        initializer = [self.assignment_expression()]
+
+        return initializer
 
     def pointer(self):
         raise ParseError
