@@ -33,3 +33,6 @@ const long a; 10;                                           $ 10
 #const long a = 10; a = 20;                                 $ -1
 long a(), b = 0;   b;                                       $ 0
 long f(); f() + 10;                                         $ 20
+long g(int, int, int); g(1, 2, 3);                          $ 6
+# 警告
+long g(); g(2, 3, 5);                                       $ 10

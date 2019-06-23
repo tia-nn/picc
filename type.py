@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -42,7 +42,7 @@ class Type:
     noreturn: bool = None
     is_func: bool = None
     func_call_to: 'Type' = None
-    param_list: List['Type'] = None
+    param_list: List[Tuple['Type', Optional[str]]] = None
 
     def is_arithmetic(self):
         return self.ty in ARITHMETIC_TYPE

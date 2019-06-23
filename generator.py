@@ -10,6 +10,7 @@ SIZE_NAME = {
     4: 'DWORD',
     8: 'QWORD',
 }
+arg_register = 'rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9'
 
 
 class Generator:
@@ -62,8 +63,12 @@ class Generator:
             return
 
         if node.ty == ND.CALL:
+            for n in node.call_args[::-1]:
+                self.gen(n)
             self.gen_addr(node.call)
             print('  pop rax')
+            for i in range(min(len(node.call_args), len(arg_register))):
+                print('  pop', arg_register[i])
             print('  call rax')
             print('  push rax')
             return

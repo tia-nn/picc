@@ -37,6 +37,7 @@ class Node:
     rhs: 'Node' = None
     d_init_list: List['Node'] = None
     call: 'Node' = None
+    call_args: List['Node'] = None
 
 
 @dataclass
@@ -108,6 +109,26 @@ class ParseUtils:
         if not allow_null and not ret:
             raise ParseError
         return ret
+
+    def sep_repeat(self, method, sep, allow_null=False):
+        try:
+            ret = [method()]
+        except ParseError:
+            if allow_null:
+                return []
+            raise
+        while True:
+            if self.consume(sep):
+                try:
+                    ret.append(method())
+                except ParseError:
+                    self.p -= 1
+                    break
+                continue
+            break
+
+        return ret
+
 
     @staticmethod
     def select(method):
@@ -260,11 +281,14 @@ class ExpressionParser(TokenParser):
 
         while True:
             if self.consume('('):
+                args = self.sep_repeat(self.assignment_expression, ',', True)
+                if len(args) != len(postfix.type.param_list):
+                    warning('引数の個数が宣言と違います')
                 self.consume_must(')')
                 if not postfix.type.is_func:
                     raise TypeError('関数以外を呼び出そうとしています')
 
-                postfix = Node(ND.CALL, type=postfix.type.func_call_to, call=postfix)
+                postfix = Node(ND.CALL, type=postfix.type.func_call_to, call=postfix, call_args=args)
                 continue
             break
 
@@ -627,8 +651,7 @@ class DeclarationParser(ExpressionParser):
             t.func_call_to = to
             name = declarator.name
             param_list = declarator.list
-            for param in param_list:
-                pass
+            t.param_list = param_list
             self.variables[name] = t
 
         if t.const and initializer is None:
@@ -674,7 +697,20 @@ class DeclarationParser(ExpressionParser):
         raise ParseError
 
     def parameter_type_list(self):
-        return []
+        params = self.parameter_list()
+
+        if self.consume(','):
+            raise Exception('非対応')
+
+        return params
+
+    def parameter_list(self):
+        return self.sep_repeat(self.parameter_declaration, ',', True)
+
+    def parameter_declaration(self):
+        declaration_specs = self.declaration_specifiers()
+        t = self.make_type(declaration_specs)
+        return t, None
 
     """
 
