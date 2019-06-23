@@ -37,6 +37,8 @@ if __name__ == '__main__':
     if sys.argv[1] == 'test':
         import subprocess
         for case in open('test.picc'):
+            if case == '\n' or case[0] == '#':
+                continue
             code, res = case.split('$')
             res = int(res)
             main(code)

@@ -5,7 +5,7 @@ from collections import deque
 
 from type import Type
 from tokenizer import TK, Token
-from utils import debug
+from utils import debug, warning
 
 
 TYPES = 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
@@ -487,6 +487,8 @@ class ExpressionParser(TokenParser):
 
         while True:
             if self.consume('='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
                 assign = Node('=', type=assign.type, lhs=assign, rhs=self.assignment_expression())
             break
 
@@ -597,6 +599,9 @@ class DeclarationParser(ExpressionParser):
         # 内部的変数宣言
         self.variables[declarator] = t
         self.offset[declarator] = max(self.offset.values() or [0]) + t.size
+
+        if t.const and initializer is None:
+            warning('const宣言で初期化されていません')
 
         return declarator, initializer
 

@@ -33,4 +33,8 @@ def debug(*args):
     sys.stderr.write('debug: '+(' '.join([str(i) for i in args])+'\n'))
 
 
+def warning(*args):
+    sys.stderr.write('警告: ' + (' '.join([str(i) for i in args]) + '\n'))
+
+
 
