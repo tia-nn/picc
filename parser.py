@@ -1,7 +1,8 @@
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict, Tuple, Any
 from dataclasses import dataclass
 from enum import Enum, auto
-from collections import deque
+from collections import deque, namedtuple
+from copy import copy
 
 from type import Type
 from tokenizer import TK, Token
@@ -24,6 +25,7 @@ class ND(Enum):
     INT = auto()
     IDE = auto()
     DECL = auto()
+    CALL = auto()
 
 
 @dataclass
@@ -34,6 +36,14 @@ class Node:
     lhs: 'Node' = None
     rhs: 'Node' = None
     d_init_list: List['Node'] = None
+    call: 'Node' = None
+
+
+@dataclass
+class InnerNode:
+    ty: Union[ND, str]
+    list: List[Any]
+    name: str
 
 
 t_signed_int = Type('int', signed=True)
@@ -47,6 +57,7 @@ class ParseUtils:
     tokens: List[Token]
     variables: Dict[str, Type]
     offset: Dict[str, int]
+    functions: Dict[str, Type]
 
     # utils
 
@@ -248,6 +259,13 @@ class ExpressionParser(TokenParser):
         postfix = self.primary_expression()
 
         while True:
+            if self.consume('('):
+                self.consume_must(')')
+                if not postfix.type.is_func:
+                    raise TypeError('関数以外を呼び出そうとしています')
+
+                postfix = Node(ND.CALL, type=postfix.type.func_call_to, call=postfix)
+                continue
             break
 
         return postfix
@@ -594,11 +612,24 @@ class DeclarationParser(ExpressionParser):
 
         initializer = None
         if self.consume('='):
+            if isinstance(declarator, InnerNode):
+                raise TypeError('関数が初期化されています')
             initializer = self.initializer()
 
-        # 内部的変数宣言
-        self.variables[declarator] = t
-        self.offset[declarator] = max(self.offset.values() or [0]) + t.size
+        # 内部的宣言
+        if isinstance(declarator, str):
+            self.variables[declarator] = t
+            self.offset[declarator] = max(self.offset.values() or [0]) + t.size
+        elif isinstance(declarator, InnerNode) and declarator.ty == 'prototype_decl':
+            t = copy(t)
+            to = copy(t)
+            t.is_func = True
+            t.func_call_to = to
+            name = declarator.name
+            param_list = declarator.list
+            for param in param_list:
+                pass
+            self.variables[name] = t
 
         if t.const and initializer is None:
             warning('const宣言で初期化されていません')
@@ -606,10 +637,7 @@ class DeclarationParser(ExpressionParser):
         return declarator, initializer
 
     def declarator(self):
-        try:
-            pointer = self.pointer()
-        except ParseError:
-            pointer = None
+        pointer = self.select(self.pointer)
         direct_declarator = self.direct_declarator()
         return direct_declarator
 
@@ -622,6 +650,11 @@ class DeclarationParser(ExpressionParser):
             pass
 
         while True:
+            if self.consume('('):
+                parameter_type_list = self.parameter_type_list()
+                direct_declarator = InnerNode('prototype_decl', list=parameter_type_list, name=direct_declarator)
+                self.consume_must(')')
+                #continue
             break
 
         if direct_declarator is None:
@@ -639,6 +672,9 @@ class DeclarationParser(ExpressionParser):
 
     def pointer(self):
         raise ParseError
+
+    def parameter_type_list(self):
+        return []
 
     """
 

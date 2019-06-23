@@ -36,13 +36,14 @@ if __name__ == '__main__':
 
     if sys.argv[1] == 'test':
         import subprocess
+        subprocess.run('gcc -c -o testlib.o testlib.c'.split())
         for case in open('test.picc'):
             if case == '\n' or case[0] == '#':
                 continue
             code, res = case.split('$')
             res = int(res)
             main(code)
-            subprocess.run('gcc -o a a.s'.split())
+            subprocess.run('gcc -o a a.s testlib.o'.split())
             a = subprocess.run('./a').returncode
             if a == res:
                 print('ok:', code, '=>', a)

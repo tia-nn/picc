@@ -40,6 +40,9 @@ class Type:
     atomic: bool = None
     inline: bool = None
     noreturn: bool = None
+    is_func: bool = None
+    func_call_to: 'Type' = None
+    param_list: List['Type'] = None
 
     def is_arithmetic(self):
         return self.ty in ARITHMETIC_TYPE

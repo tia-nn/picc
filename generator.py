@@ -32,6 +32,9 @@ class Generator:
 
     def gen_addr(self, node: Node):
         if node.ty == ND.IDE:
+            if node.type.is_func:
+                print('  push OFFSET FLAT :'+node.val)
+                return
             print('  mov rax, rbp')
             print('  sub rax,', self.offsets[node.val])
             print('  push rax')
@@ -56,6 +59,13 @@ class Generator:
                 self.gen(i)
                 print('  pop rax')
             print('  push 0  # decl statement')
+            return
+
+        if node.ty == ND.CALL:
+            self.gen_addr(node.call)
+            print('  pop rax')
+            print('  call rax')
+            print('  push rax')
             return
 
         if node.ty == '=':

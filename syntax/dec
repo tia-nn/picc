@@ -99,7 +99,7 @@ declarator:
                   direct-declarator [ type-qualifier-list static assignment-expression ]
                   direct-declarator [ type-qualifier-listopt * ]
                   direct-declarator ( parameter-type-list )
-                  direct-declarator ( identifier-listopt )
+                  direct-declarator ( identifier-list? )
           pointer:
                  * type-qualifier-listopt
                  * type-qualifier-listopt pointer
@@ -114,7 +114,7 @@ declarator:
                 parameter-list , parameter-declaration
           parameter-declaration:
                 declaration-specifiers declarator
-                declaration-specifiers abstract-declaratoropt
+                declaration-specifiers abstract-declarator?
           identifier-list:
                  identifier
                  identifier-list , identifier
