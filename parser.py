@@ -504,7 +504,48 @@ class ExpressionParser(TokenParser):
         return exp
 
     def constant_expression(self):  # TODO: http://port70.net/~nsz/c/c11/n1570.html#6.6
-        return self.conditional_expression()
+        constant = self.conditional_expression()
+
+        def gen_constant(node):
+            if node.ty == ND.INT:
+                return node.val
+            if node.ty == '*':
+                return gen_constant(node.lhs) * gen_constant(node.rhs)
+            if node.ty == '/':
+                return gen_constant(node.lhs) // gen_constant(node.rhs)
+            if node.ty == '%':
+                return gen_constant(node.lhs) % gen_constant(node.rhs)
+            if node.ty == '+':
+                return gen_constant(node.lhs) + gen_constant(node.rhs)
+            if node.ty == '-':
+                return gen_constant(node.lhs) - gen_constant(node.rhs)
+            if node.ty == '<<':
+                return gen_constant(node.lhs) << gen_constant(node.rhs)
+            if node.ty == '>>':
+                return gen_constant(node.lhs) >> gen_constant(node.rhs)
+            if node.ty == '<':
+                return int(gen_constant(node.lhs) < gen_constant(node.rhs))
+            if node.ty == '>':
+                return int(gen_constant(node.lhs) > gen_constant(node.rhs))
+            if node.ty == '<=':
+                return int(gen_constant(node.lhs) <= gen_constant(node.rhs))
+            if node.ty == '>=':
+                return int(gen_constant(node.lhs) >= gen_constant(node.rhs))
+            if node.ty == '==':
+                return int(gen_constant(node.lhs) == gen_constant(node.rhs))
+            if node.ty == '!=':
+                return int(gen_constant(node.lhs) != gen_constant(node.rhs))
+            if node.ty == '&':
+                return int(gen_constant(node.lhs) & gen_constant(node.rhs))
+            if node.ty == '|':
+                return int(gen_constant(node.lhs) | gen_constant(node.rhs))
+            if node.ty == '&&':
+                return 1 if gen_constant(node.lhs) and gen_constant(node.rhs) else 0
+            if node.ty == '|':
+                return 1 if gen_constant(node.lhs) or gen_constant(node.rhs) else 0
+
+        res = gen_constant(constant)
+        return Node(ND.INT, type=t_signed_int, val=res)
 
 
 class DeclarationParser(ExpressionParser):
