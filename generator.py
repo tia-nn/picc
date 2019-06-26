@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from parser import Node, ND
+from parser.parseutils import Node, ND
 from utils import debug
 
 
@@ -20,16 +20,8 @@ class Generator:
         self.offsets = offsets
         print('.intel_syntax noprefix')
         print('.global main')
-        print('main:')
-        print('  push rbp')
-        print('  mov rbp, rsp')
-        print('  sub rsp,', max(offsets.values() or [0]))
         for node in nodes:
             self.gen(node)
-            print('  pop rax')
-        print('  mov rsp, rbp')
-        print('  pop rbp')
-        print('  ret')
 
     def gen_addr(self, node: Node):
         if node.ty == ND.IDE:
@@ -44,10 +36,28 @@ class Generator:
 
     def gen(self, node: Node):
 
+        if node.ty == ND.DEF:
+            print(node.val+':')
+            print('  push rbp')
+            print('  mov rbp, rsp')
+            self.gen(node.block)
+            print('  mov rsp, rbp')
+            print('  pop rbp')
+            print('  ret')
+            return
+
+        if node.ty == ND.BLOCK:
+            # print(node.offset
+            for i in node.stmts:
+                self.gen(i)
+                print('  pop rax')
+            return
+
         if node.ty == ND.INT:
             if node.type.ty in ('int', 'long', 'long long'):  # 整数
                 print('  push', node.val)
                 return
+            raise TypeError
 
         if node.ty == ND.IDE:
             self.gen_addr(node)

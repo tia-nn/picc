@@ -1,7 +1,7 @@
 import sys
 
 from tokenizer import Tokenizer
-from parser import Parser
+from parser.parser import Parser
 from generator import Generator
 
 
@@ -37,8 +37,9 @@ if __name__ == '__main__':
     if sys.argv[1] == 'test':
         import subprocess
         subprocess.run('gcc -c -o testlib.o testlib.c'.split())
-        for case in open('test.picc'):
-            if case == '\n' or case[0] == '#':
+        for case in open('testv2.picc').read().split('$$'):
+            case = case.strip('\n')
+            if not case or case[0] == '#':
                 continue
             code, res = case.split('$')
             res = int(res)

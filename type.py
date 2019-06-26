@@ -2,11 +2,11 @@ from typing import List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
-TYPES = '.ptr', 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
+TYPES = '.func', 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
 STORAGE_CLASS_SPECIFIER = 'typedef', 'extern', 'static', '_Thread_local', 'auto', 'register'
 TYPE_SPECIFIER = 'void', 'char', 'short', 'int', 'long', 'float', 'double', \
                  'signed', 'unsigned', '_Bool', '_Complex'
-TYPE_QUALIFIER = 'const', 'register', 'volatile', '_Atomic'
+TYPE_QUALIFIER = 'const', 'restrict', 'volatile', '_Atomic'
 FUNCTION_SPECIFIER = 'inline', '_Noreturn'
 
 ARITHMETIC_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
@@ -40,7 +40,6 @@ class Type:
     atomic: bool = None
     inline: bool = None
     noreturn: bool = None
-    is_func: bool = None
     func_call_to: 'Type' = None
     param_list: List[Tuple['Type', Optional[str]]] = None
 
@@ -68,6 +67,10 @@ class Type:
     @property
     def size(self):
         return TYPE_SIZE[self.ty]
+
+    @property
+    def is_func(self):
+        return self.ty == '.func'
 
     def __repr__(self):
         fs = ('ty', 'signed', 'ptr_to', 'array_size', 'storage_class', 'thread_local',
