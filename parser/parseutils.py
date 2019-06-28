@@ -167,7 +167,6 @@ class ParseUtils:
 
         return ret
 
-
     @staticmethod
     def select(method):
         try:
@@ -191,7 +190,7 @@ class ParseUtils:
         for s in decl_specs:
             if s in ('signed', 'unsigned'):
                 if t.signed is not None:
-                    raise ParseError('signed, unsignedが複数指定されています')
+                    raise TypeError('signed, unsignedが複数指定されています')
                 t.signed = s == 'signed'
                 continue
             if s == '_Thread_local':
@@ -201,37 +200,37 @@ class ParseUtils:
                 continue
             if s == 'const':
                 if t.const is not None:
-                    raise ParseError('constが複数あります')
+                    raise TypeError('constが複数あります')
                 t.const = True
                 continue
             if s == 'restrict':
                 if t.restrict is not None:
-                    raise ParseError('restrictが複数あります')
+                    raise TypeError('restrictが複数あります')
                 t.restrict = True
                 continue
             if s == 'volatile':
                 if t.volatile is not None:
-                    raise ParseError('volatileが複数あります')
+                    raise TypeError('volatileが複数あります')
                 t.volatile = True
                 continue
             if s == '_Atomic':
                 if t.atomic is not None:
-                    raise ParseError('_Atomicが複数あります')
+                    raise TypeError('_Atomicが複数あります')
                 t.atomic = True
                 continue
             if s == 'inline':
                 if t.inline is not None:
-                    raise ParseError('inlineが複数あります')
+                    raise TypeError('inlineが複数あります')
                 t.inline = True
                 continue
             if s == '_Noreturn':
                 if t.noreturn is not None:
-                    raise ParseError('_Noreturnが複数あります')
+                    raise TypeError('_Noreturnが複数あります')
                 t.noreturn = True
                 continue
             if s in STORAGE_CLASS_SPECIFIER:
                 if t.storage_class is not None:
-                    raise ParseError('記憶域クラス指定子が複数指定されています')
+                    raise TypeError('記憶域クラス指定子が複数指定されています')
                 t.storage_class = s
                 continue
             if s in TYPE_SPECIFIER:
@@ -259,7 +258,7 @@ class ParseUtils:
             raise TypeError('error1')
 
         if not_arithmetic and (long or short):
-            raise ParseError('非算術型にlong|shortを指定しています')
+            raise TypeError('非算術型にlong|shortを指定しています')
         if long and short:
             raise TypeError('longとshortが同時に指定されています')
 

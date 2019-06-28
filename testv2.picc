@@ -13,7 +13,8 @@ long main() {
 } $ 19 $$
 
 long f(long a, long b) {
-    a + b;
+    long c = a + b;
+    c;
 }
 
 long main() {
