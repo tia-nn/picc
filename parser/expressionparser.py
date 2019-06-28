@@ -38,6 +38,21 @@ class ExpressionParser(TokenParser):
                 postfix = Node(ND.CALL, type=postfix.type.func_call_to, call=postfix, call_args=args)
                 continue
 
+            if self.consume('++'):
+                if not postfix.type.is_real_num():
+                    raise TypeError('後置++に実数型以外が指定されています')
+                if postfix.type.const:
+                    raise TypeError('後置++にconst変数が指定されています')
+                postfix = Node('++', type=postfix.type, lhs=postfix)
+                continue
+            if self.consume('--'):
+                if not postfix.type.is_real_num():
+                    raise TypeError('後置--に実数型以外が指定されています')
+                if postfix.type.const:
+                    raise TypeError('後置--にconst変数が指定されています')
+                postfix = Node('--', type=postfix.type, lhs=postfix)
+                continue
+
             break
 
         if postfix.type.ty == '.unknown':
@@ -49,6 +64,23 @@ class ExpressionParser(TokenParser):
         unary = None
 
         while True:
+            if self.consume('++'):
+                node = self.unary_expression()
+                if not node.type.is_real_num():
+                    raise TypeError('前置++に実数型以外が指定されています')
+                if node.type.const:
+                    raise TypeError('前置++にconst変数が指定されています')
+                unary = Node('+', lhs=node, rhs=n_signed_int_plus1, type=node.type)
+                continue
+            if self.consume('--'):
+                node = self.unary_expression()
+                if not node.type.is_real_num():
+                    raise TypeError('前置--に実数型以外が指定されています')
+                if node.type.const:
+                    raise TypeError('前置--にconst変数が指定されています')
+                unary = Node('-', lhs=node, rhs=n_signed_int_plus1, type=node.type)
+                continue
+
             if self.consume('+'):
                 unary = self.cast_expression()
                 if not unary.type.is_arithmetic():
@@ -64,6 +96,10 @@ class ExpressionParser(TokenParser):
                 node = self.cast_expression()
                 unary = Node('==', type=t_signed_int, lhs=node, rhs=n_signed_int_0)
                 continue
+
+            if self.consume('sizeof'):
+                node = self.unary_expression()
+                return Node(ND.INT, type=t_signed_int, val=node.type.size)
             break
 
         if unary is None:
@@ -284,6 +320,98 @@ class ExpressionParser(TokenParser):
                 if assign.type.const:
                     raise TypeError('const変数に代入しています')
                 assign = Node('=', type=assign.type, lhs=assign, rhs=self.assignment_expression())
+                continue
+
+            if self.consume('*='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('*', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('/='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('/', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('%='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('%', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('+='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('+', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('-='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('-', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('<<='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('<<', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('>>='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('>>', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('&='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('&', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('^='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('^', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
+            if self.consume('|='):
+                if assign.type.const:
+                    raise TypeError('const変数に代入しています')
+                assign = Node('=', lhs=assign,
+                              rhs=Node('|', lhs=assign, rhs=self.assignment_expression(), type=assign.type),
+                              type=assign.type
+                              )
+                continue
+
             break
 
         return assign

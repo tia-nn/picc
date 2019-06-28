@@ -222,6 +222,24 @@ class Generator:
             print('  push rax')
             return
 
+        if node.ty == '++':
+            self.gen_addr(node.lhs)
+            print('  pop rdi')
+            print('  push QWORD PTR [rdi]')
+            print('  mov rax, QWORD PTR [rdi]')
+            print('  add rax, 1')
+            print('  mov QWORD PTR [rdi], rax')
+            return
+
+        if node.ty == '--':
+            self.gen_addr(node.lhs)
+            print('  pop rdi')
+            print('  push QWORD PTR [rdi]')
+            print('  mov rax, QWORD PTR [rdi]')
+            print('  sub rax, 1')
+            print('  mov QWORD PTR [rdi], rax')
+            return
+
         if node.ty == '=':
             self.gen_addr(node.lhs)
             self.gen(node.rhs)
@@ -229,6 +247,12 @@ class Generator:
             print('  pop rax')
             print(f'  mov {SIZE_NAME[node.lhs.type.size]} PTR [rax], rdi')  # todo: 右のレジスタのサイズを調整
             print('  push rdi')
+            return
+
+        if node.ty == ',':
+            self.gen(node.lhs)
+            print('pop rax')
+            self.gen(node.rhs)
             return
 
         # 二項演算子
