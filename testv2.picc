@@ -1,22 +1,65 @@
 long f() {
-    10 + 18;
+    return 10 + 18;
 }
 
 long main() {
-    f();
+    return f();
 } $ 28 $$
 
 long main() {
     long a, b = 9;
     a = 10;
-    a + b;
+    return a + b;
 } $ 19 $$
 
 long f(long a, long b) {
     long c = a + b;
-    c;
+    return c;
 }
 
 long main() {
-    f(4, 7);
+    return f(4, 7);
 } $ 11 $$
+
+long main() {
+    long a;
+    a = 10;
+    if (a == 10) {
+        return 5;
+    }
+    return 10;
+} $ 5 $$
+
+long main() {
+    long a;
+    a = 20;
+    if (a == 10) {
+        return 5;
+    }
+    return 10;
+} $ 10 $$
+
+long main() {
+    long a;
+    a = 0;
+    for (long i; i < 10; i = i + 1) {
+        a = a + i;
+    }
+    return a;
+} $ 45 $$
+
+long main() {
+    long a = 0;
+    for(;;) {
+        a = a + 1;
+        if (a == 30) return a;
+    }
+} $ 30 $$
+
+long main() {
+    long a = 0;
+    while (1) {
+        a = a + 1;
+        if (a == 20) return a;
+    }
+} $ 20 $$

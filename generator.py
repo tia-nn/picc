@@ -3,7 +3,6 @@ from typing import List, Dict
 from parser.parseutils import Node, ND, Scope
 from utils import debug
 
-
 SIZE_NAME = {
     1: 'BYTE',
     2: 'WORD',
@@ -15,9 +14,13 @@ arg_register = 'rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9'
 
 class Generator:
     scope: Scope
+    label_count: int
+    now_offset: int
 
     def generate(self, nodes: List[Node], vars: Scope):
         self.scope = vars
+        self.label_count = 0
+        self.now_offset = 0
         print('.intel_syntax noprefix')
         print('.global main')
         for node in nodes:
@@ -26,7 +29,7 @@ class Generator:
     def gen_addr(self, node: Node):
         if node.ty == ND.IDE:
             if node.type.is_func:
-                print('  push OFFSET FLAT :'+node.val)
+                print('  push OFFSET FLAT :' + node.val)
                 return
             _, offset = self.scope.get(node.val)
             print('  mov rax, rbp')
@@ -37,8 +40,10 @@ class Generator:
 
     def gen(self, node: Node):
 
+        # statement
+
         if node.ty == ND.DEF:
-            print(node.val+':')
+            print(node.val + ':')
             print('  push rbp')
             print('  mov rbp, rsp')
             self.gen(node.block)
@@ -50,20 +55,119 @@ class Generator:
         if node.ty == ND.BLOCK:
             # print(node.offset
             self.scope.push_scope(node.scope)
-            print('  sub rsp,', self.scope.max_offset())
+            need_offset = self.scope.max_offset()
+            offset = need_offset - self.now_offset
+            self.now_offset = offset
+            print('  sub rsp,', offset)
 
             if node.args is not None:
                 for i, k in enumerate(node.args):
-                    _, offset = self.scope.get(k)
+                    _, o = self.scope.get(k)
                     print('  mov rax, rbp')
-                    print('  sub rax,', offset)
+                    print('  sub rax,', o)
                     print('  mov QWORD PTR [rax],', arg_register[i])
 
             for i in node.stmts:
                 self.gen(i)
-                print('  pop rax')
+
+            print('  add rsp,', offset)
+
             self.scope.pop_scope()
             return
+
+        if node.ty == ND.EXP:
+            if node.block is not None:
+                self.gen(node.block)
+                print('  pop rax')
+            return
+
+        l = self.label_count
+
+        if node.ty == 'if':
+            self.label_count += 1
+            print(f'.LIFS{l}:')
+            self.gen(node.condition)
+            print('  pop rax')
+            print('  cmp rax, 0')
+            print(f'  je .LIFE{l}')
+            self.gen(node.block)
+            print(f'.LIFE{l}:')
+            return
+
+        if node.ty == 'if-else':
+            self.label_count += 1
+            print(f'.LIFS{l}:')
+            self.gen(node.condition)
+            print('  pop rax')
+            print('  cmp rax, 0')
+            print(f'  je .LIFEL{l}')
+            self.gen(node.block)
+            print(f'  jmp .LIFE{l}')
+            print(f'.LIFEL{l}:')
+            self.gen(node.else_block)
+            print(f'.LIFE{l}:')
+            return
+
+        if node.ty == 'while':
+            self.label_count += 1
+            print(f'.LWHILES{l}:')
+            self.gen(node.condition)
+            print('  pop rax')
+            print('  cmp rax, 0')
+            print(f'  je .LWHILEE{l}')
+            self.gen(node.block)
+            print(f'  jmp .LWHILES{l}')
+            print(f'.LWHILEE{l}:')
+            return
+
+        if node.ty == 'for':
+            self.label_count += 1
+            self.scope.push_scope(node.scope)
+            need_offset = self.scope.max_offset()
+            offset = need_offset - self.now_offset
+            self.now_offset = offset
+            print('  sub rsp,', offset)
+
+            print(f'.LFORI{l}:')
+            if node.init is not None:
+                self.gen(node.init)
+                if node.init.ty != ND.DECL:
+                    print('  pop rax')
+            print(f'  jmp .LFORB{l}')
+            print(f'.LFORS{l}:')
+            if node.proc is not None:
+                self.gen(node.proc)
+                print('  pop rax')
+            print(f'.LFORB{l}:')
+            if node.condition is not None:
+                self.gen(node.condition)
+            else:
+                print('push 1')
+            print('  pop rax')
+            print('  cmp rax, 0')
+            print(f'  je .LFORE{l}')
+            self.gen(node.block)
+            print(f'  jmp .LFORS{l}')
+            print(f'.LFORE{l}:')
+            print('  add rsp,', offset)
+
+            self.scope.pop_scope()
+            return
+
+        if node.ty == 'return':
+            self.gen(node.lhs)
+            print('  pop rax')
+            print('  mov rsp, rbp')
+            print('  pop rbp')
+            print('  ret')
+            return
+
+        if node.ty == ND.DECL:
+            for i in node.d_init_list:
+                self.gen(i)
+            return
+
+        # expression
 
         if node.ty == ND.INT:
             if node.type.ty in ('int', 'long', 'long long'):  # 整数
@@ -75,13 +179,6 @@ class Generator:
             self.gen_addr(node)
             print('  pop rax')
             print(f'  push {SIZE_NAME[node.type.size]} PTR [rax]')
-            return
-
-        if node.ty == ND.DECL:
-            for i in node.d_init_list:
-                self.gen(i)
-                print('  pop rax')
-            print('  push 0  # decl statement')
             return
 
         if node.ty == ND.CALL:

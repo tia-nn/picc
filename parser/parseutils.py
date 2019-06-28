@@ -28,6 +28,8 @@ class ND(Enum):
     UNKNOWN = auto()
     DEF = auto()
     BLOCK = auto()
+    NONE = auto()
+    EXP = auto()
 
 
 @dataclass
@@ -37,11 +39,15 @@ class Node:
     val: Union[int, str] = None
     lhs: 'Node' = None
     rhs: 'Node' = None
+    condition: 'Node' = None
+    init: 'Node' = None
+    proc: 'Node' = None
     d_init_list: List['Node'] = None
     call: 'Node' = None
     call_args: List['Node'] = None
     stmts: List['Node'] = None
     block: 'Node' = None
+    else_block: 'Node' = None
     scope: 'Scope' = None
     args: Dict[str, Tuple[Type, int]] = None
 
