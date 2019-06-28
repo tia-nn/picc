@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from parser.parseutils import Node, ND
+from parser.parseutils import Node, ND, Scope
 from utils import debug
 
 
@@ -14,10 +14,10 @@ arg_register = 'rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9'
 
 
 class Generator:
-    offsets: Dict[str, int]
+    scope: Scope
 
-    def generate(self, nodes: List[Node], offsets: Dict[str, int]):
-        self.offsets = offsets
+    def generate(self, nodes: List[Node], vars: Scope):
+        self.scope = vars
         print('.intel_syntax noprefix')
         print('.global main')
         for node in nodes:
@@ -28,8 +28,9 @@ class Generator:
             if node.type.is_func:
                 print('  push OFFSET FLAT :'+node.val)
                 return
+            _, offset = self.scope.get(node.val)
             print('  mov rax, rbp')
-            print('  sub rax,', self.offsets[node.val])
+            print('  sub rax,', offset)
             print('  push rax')
             return
         raise TypeError
@@ -48,9 +49,12 @@ class Generator:
 
         if node.ty == ND.BLOCK:
             # print(node.offset
+            self.scope.push_scope(node.scope)
+            print('  sub rsp,', self.scope.max_offset())
             for i in node.stmts:
                 self.gen(i)
                 print('  pop rax')
+            self.scope.pop_scope()
             return
 
         if node.ty == ND.INT:

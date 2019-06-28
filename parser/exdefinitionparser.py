@@ -27,7 +27,7 @@ class ExDefinitionParser(StatementParser):
 
         block = self.compound_statement()
 
-        self.variables[name] = Type('.func', func_call_to=t)
+        self.variables.set_var(name, Type('.func', func_call_to=t))
 
         return Node(ND.DEF, val=name, block=block)
 

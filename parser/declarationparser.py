@@ -57,8 +57,7 @@ class DeclarationParser(ExpressionParser):
 
         # 内部的宣言
         if isinstance(declarator, str):  # スカラ変数
-            self.variables[declarator] = t
-            self.offset[declarator] = max(self.offset.values() or [0]) + t.size
+            self.variables.set_var(declarator, t)
         elif isinstance(declarator, InnerNode) and declarator.ty == 'func':
             to = copy(t)
             t = Type('.func')
@@ -66,7 +65,7 @@ class DeclarationParser(ExpressionParser):
             name = declarator.name
             param_list = declarator.list
             t.param_list = param_list
-            self.variables[name] = t
+            self.variables.set_var(name, t)
 
         if t.const and initializer is None:
             warning('const宣言で初期化されていません')

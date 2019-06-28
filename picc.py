@@ -21,7 +21,7 @@ def main(code=None):
 
     tokens = t.tokenize(code)
     nodes = p.parse(tokens)
-    g.generate(nodes, p.offset)
+    g.generate(nodes, p.variables)
 
     sys.stdout = tmp
 

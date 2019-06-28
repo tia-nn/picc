@@ -25,6 +25,9 @@ class StatementParser(DeclarationParser):
 
     def compound_statement(self):
         if self.consume('{'):
+            self.variables.new_scope()
             stmt = self.repeat(self.statement)
             self.consume_must('}')
-            return Node(ND.BLOCK, stmts=stmt)
+            return Node(ND.BLOCK, stmts=stmt, scope=self.variables.pop_scope())
+
+        raise ParseError

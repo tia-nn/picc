@@ -1,6 +1,7 @@
-from typing import List, Union, Dict, Tuple, Any
+from typing import List, Union, Dict, Tuple, Any, Deque
 from enum import Enum, auto
 from dataclasses import dataclass
+from collections import deque
 
 from type import Type
 from tokenizer import TK, Token
@@ -41,6 +42,7 @@ class Node:
     call_args: List['Node'] = None
     stmts: List['Node'] = None
     block: 'Node' = None
+    scope: 'Scope' = None
 
 
 @dataclass
@@ -56,11 +58,44 @@ n_signed_int_minus1 = Node(ND.INT, type=t_signed_int, val=-1)
 n_signed_int_0 = Node(ND.INT, type=t_signed_int, val=0)
 
 
+class Scope:
+    _scope: Deque[Dict[str, Tuple[Type, int]]]
+
+    def __init__(self):
+        self._scope = deque([{}])
+
+    def get(self, name) -> Tuple[Type, int]:
+        for i in reversed(self._scope):
+            if name in i:
+                return i[name]
+
+        raise TypeError('変数が宣言されていません')
+
+    def new_scope(self):
+        self._scope.append({})
+
+    def set_var(self, name: str, ty: Type):
+        self._scope[-1][name] = ty, self.max_offset() + ty.size
+
+    def max_offset(self) -> int:
+        a = [[j[1] for j in i.values()] for i in self._scope]
+        b = [0]
+        for i in a:
+            b += i
+
+        return max([k for k in b])
+
+    def pop_scope(self):
+        return self._scope.pop()
+
+    def push_scope(self, scope):
+        self._scope.append(scope)
+
+
 class ParseUtils:
     p: int
     tokens: List[Token]
-    variables: List[Dict[str, Type]]
-    offset: List[Dict[str, int]]
+    variables: Scope
 
     # utils
 
@@ -245,3 +280,24 @@ class ParseUtils:
 
         raise TypeError('error2')
 
+
+if __name__ == '__main__':
+    scope = Scope()
+
+    scope.set_var('a', Type('int'))
+    scope.set_var('b', Type('int'))
+
+    print(scope.get('b'))
+
+    scope.new_scope()
+    scope.set_var('b', Type('long'))
+
+    print(scope.get('b'))
+
+    print(scope._scope)
+
+    print(scope.pop_scope())
+
+    print(scope.get('b'))
+
+    print(scope._scope)

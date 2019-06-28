@@ -4,7 +4,7 @@ from type import Type
 from tokenizer import TK, Token
 from utils import debug, warning
 
-from parser.parseutils import Node
+from parser.parseutils import Node, Scope
 from parser.statementparser import *
 from parser.exdefinitionparser import ExDefinitionParser
 
@@ -18,19 +18,11 @@ FUNCTION_SPECIFIER = 'inline', '_Noreturn'
 
 
 class Parser(ExDefinitionParser):
-    p: int
-    nodes: List[Node]
-    variables: Dict[str, Type]
 
     def parse(self, tokens):
         self.p = 0
-        nodes = []
-        self.variables = {}
-        self.offset = {}
+        self.variables = Scope()
         self.tokens = tokens
-        #while not self.consume(TK.EOF):
-        #    nodes.append(self.translation_unit())
-        #return nodes
         return self.translation_unit()
 
 

@@ -23,6 +23,7 @@ TYPE_SIZE = {
     'long long': 16,
     'float': 8,
     'double': 16,
+    '.func': 0,
 }
 
 
