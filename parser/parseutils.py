@@ -43,6 +43,7 @@ class Node:
     stmts: List['Node'] = None
     block: 'Node' = None
     scope: 'Scope' = None
+    args: Dict[str, Tuple[Type, int]] = None
 
 
 @dataclass

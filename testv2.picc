@@ -11,3 +11,11 @@ long main() {
     a = 10;
     a + b;
 } $ 19 $$
+
+long f(long a, long b) {
+    a + b;
+}
+
+long main() {
+    f(4, 7);
+} $ 11 $$

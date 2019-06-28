@@ -109,7 +109,7 @@ class DeclarationParser(ExpressionParser):
     def pointer(self) -> None:
         raise ParseError
 
-    def parameter_type_list(self) -> List[Tuple[Type, Optional[Node]]]:
+    def parameter_type_list(self) -> List[Tuple[Type, Optional[Union[str, InnerNode]]]]:
         params = self.parameter_list()
 
         if self.consume(','):
@@ -117,14 +117,14 @@ class DeclarationParser(ExpressionParser):
 
         return params
 
-    def parameter_list(self) -> List[Tuple[Type, Node]]:
+    def parameter_list(self) -> List[Tuple[Type, Optional[Union[str, InnerNode]]]]:
         return self.sep_repeat(self.parameter_declaration, ',', True)
 
-    def parameter_declaration(self) -> Tuple[Type, Optional[Node]]:
+    def parameter_declaration(self) -> Tuple[Type, Optional[Union[str, InnerNode]]]:
         declaration_specs = self.declaration_specifiers()
         t = self.make_type(declaration_specs)
         try:
-            declarator = self.caller(self.declarator, self.direct_declarator)
+            declarator: Optional[Union][str, InnerNode] = self.caller(self.declarator, self.direct_declarator)
         except ParseError:
             declarator = None
         return t, declarator

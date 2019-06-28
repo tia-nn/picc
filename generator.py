@@ -51,6 +51,14 @@ class Generator:
             # print(node.offset
             self.scope.push_scope(node.scope)
             print('  sub rsp,', self.scope.max_offset())
+
+            if node.args is not None:
+                for i, k in enumerate(node.args):
+                    _, offset = self.scope.get(k)
+                    print('  mov rax, rbp')
+                    print('  sub rax,', offset)
+                    print('  mov QWORD PTR [rax],', arg_register[i])
+
             for i in node.stmts:
                 self.gen(i)
                 print('  pop rax')
