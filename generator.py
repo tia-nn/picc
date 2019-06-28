@@ -1,4 +1,5 @@
-from typing import List, Dict
+from typing import List, Dict, Deque
+from collections import deque
 
 from parser.parseutils import Node, ND, Scope
 from utils import debug
@@ -16,11 +17,15 @@ class Generator:
     scope: Scope
     label_count: int
     now_offset: int
+    continue_label: Deque[str]
+    break_label: Deque[str]
 
     def generate(self, nodes: List[Node], vars: Scope):
         self.scope = vars
         self.label_count = 0
         self.now_offset = 0
+        self.continue_label = deque()
+        self.break_label = deque()
         print('.intel_syntax noprefix')
         print('.global main')
         for node in nodes:
@@ -50,6 +55,11 @@ class Generator:
             print('  mov rsp, rbp')
             print('  pop rbp')
             print('  ret')
+            return
+
+        if node.ty == ND.LABEL:
+            print(f'.L_{node.val}:')
+            self.gen(node.block)
             return
 
         if node.ty == ND.BLOCK:
@@ -110,6 +120,8 @@ class Generator:
 
         if node.ty == 'while':
             self.label_count += 1
+            self.continue_label.append(f'.LWHILES{l}')
+            self.break_label.append(f'.LWHILEE{l}')
             print(f'.LWHILES{l}:')
             self.gen(node.condition)
             print('  pop rax')
@@ -118,10 +130,14 @@ class Generator:
             self.gen(node.block)
             print(f'  jmp .LWHILES{l}')
             print(f'.LWHILEE{l}:')
+            self.continue_label.pop()
+            self.break_label.pop()
             return
 
         if node.ty == 'for':
             self.label_count += 1
+            self.continue_label.append(f'.LFORS{l}')
+            self.break_label.append(f'.LFORE{l}')
             self.scope.push_scope(node.scope)
             need_offset = self.scope.max_offset()
             offset = need_offset - self.now_offset
@@ -152,6 +168,20 @@ class Generator:
             print('  add rsp,', offset)
 
             self.scope.pop_scope()
+            self.continue_label.pop()
+            self.break_label.pop()
+            return
+
+        if node.ty == 'goto':
+            print(f'jmp .L_{node.val}')
+            return
+
+        if node.ty == 'continue':
+            print('jmp', self.continue_label[-1])
+            return
+
+        if node.ty == 'break':
+            print('jmp', self.break_label[-1])
             return
 
         if node.ty == 'return':

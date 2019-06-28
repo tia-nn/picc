@@ -63,3 +63,30 @@ long main() {
         if (a == 20) return a;
     }
 } $ 20 $$
+
+long main() {
+    long a = 0;
+    for(;;) {
+        a = a + 1;
+        if (a == 30) break;
+    }
+    return a;
+} $ 30 $$
+
+long main() {
+    long a = 0;
+    while (1) {
+        a = a + 1;
+        if (a == 20) return a;
+        if (a < 20) continue;
+        return 0;
+    }
+} $ 20 $$
+
+long main() {
+    long a = 10;
+    goto A;
+    a = 0;
+    A:
+    return a;
+} $ 10 $$

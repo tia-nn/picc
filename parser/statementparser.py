@@ -12,12 +12,27 @@ from parser.tokenparser import TK
 class StatementParser(DeclarationParser):
     def statement(self):
         return self.caller(
+            self.labeled_statement,
             self.compound_statement,
             self.expression_statement,
             self.selection_statement,
             self.iteration_statement,
             self.jump_statement,
         )
+
+    def labeled_statement(self):
+        p = self.p
+        if self.next_is(TK.IDE):
+            name = self.pos().val
+            try:
+                self.consume_must(':')
+            except TypeError:
+                self.p = p
+                raise ParseError
+            stmt = self.statement()
+            return Node(ND.LABEL, val=name, block=stmt)
+
+        raise ParseError
 
     def compound_statement(self, made_new_scope=False):
         if self.consume('{'):
@@ -33,10 +48,12 @@ class StatementParser(DeclarationParser):
         return self.caller(self.declaration, self.statement)
 
     def expression_statement(self):
+        p = self.p
         exp = self.select(self.expression)
         try:
             self.consume_must(';')
         except TypeError:
+            self.p = p
             raise ParseError
 
         return Node(ND.EXP, block=exp)

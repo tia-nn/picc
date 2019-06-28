@@ -30,6 +30,7 @@ class ND(Enum):
     BLOCK = auto()
     NONE = auto()
     EXP = auto()
+    LABEL = auto()
 
 
 @dataclass
