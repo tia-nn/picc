@@ -106,3 +106,10 @@ long main() {
     a += 10;
     return a;
 } $ 20 $$
+
+long main() {
+    long a, *b;
+    b = &a;
+    a = 10;
+    return *b;
+} $ 10 $$

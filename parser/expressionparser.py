@@ -81,6 +81,18 @@ class ExpressionParser(TokenParser):
                 unary = Node('-', lhs=node, rhs=n_signed_int_plus1, type=node.type)
                 continue
 
+            if self.consume('&'):
+                node = self.cast_expression()
+                if node.ty == ND.INT:
+                    raise TypeError('定数の参照を作成しようとしています')
+                unary = Node(ND.LEA, type=Type('.ptr', ptr_to=node.type), lhs=node)
+                continue
+            if self.consume('*'):
+                node = self.cast_expression()
+                if not node.type.is_ptr:
+                    raise TypeError('ポインタ以外を参照解決しています')
+                unary = Node(ND.REF, type=node.type.ptr_to, lhs=node)
+
             if self.consume('+'):
                 unary = self.cast_expression()
                 if not unary.type.is_arithmetic():

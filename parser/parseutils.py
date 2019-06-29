@@ -31,6 +31,8 @@ class ND(Enum):
     NONE = auto()
     EXP = auto()
     LABEL = auto()
+    LEA = auto()
+    REF = auto()
 
 
 @dataclass
@@ -57,7 +59,8 @@ class Node:
 class InnerNode:
     ty: Union[ND, str]
     list: List[Any]
-    name: str
+    name: str = None
+    to: 'InnerNode' = None
 
 
 t_signed_int = Type('int', signed=True)

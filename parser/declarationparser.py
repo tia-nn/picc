@@ -49,6 +49,19 @@ class DeclarationParser(ExpressionParser):
     def init_declarator(self, t) -> Tuple[Union[int, str], List[Node]]:
         declarator, pointer = self.declarator()
 
+        if pointer is not None:
+            def p(g: InnerNode):
+                a = Type('.ptr')
+
+                if g.to is None:
+                    a.ptr_to = t
+                    return a
+
+                a.ptr_to = p(g.to)
+                return a
+
+            t = p(pointer)
+
         initializer = None
         if self.consume('='):
             if isinstance(declarator, InnerNode):
@@ -72,10 +85,10 @@ class DeclarationParser(ExpressionParser):
 
         return declarator, initializer
 
-    def declarator(self) -> Tuple[Union[str, InnerNode], None]:
+    def declarator(self) -> Tuple[Union[str, InnerNode], Optional[InnerNode]]:
         pointer = self.select(self.pointer)
         direct_declarator = self.direct_declarator()
-        return direct_declarator, None
+        return direct_declarator, pointer
 
     def direct_declarator(self) -> Union[str, InnerNode]:
         direct_declarator = None
@@ -106,8 +119,26 @@ class DeclarationParser(ExpressionParser):
 
         return initializer
 
-    def pointer(self) -> None:
-        raise ParseError
+    def pointer(self) -> Optional[InnerNode]:
+
+        pointer = None
+
+        while True:
+            if self.consume('*'):
+                type_qualifier_list = self.repeat(self.type_qualifier)
+                pointer = InnerNode('pointer', type_qualifier_list)
+                try:
+                    p = self.pointer()
+                except ParseError:
+                    break
+                p.to = pointer
+                pointer = p
+            break
+
+        if pointer is None:
+            raise ParseError
+
+        return pointer
 
     def parameter_type_list(self) -> List[Tuple[Type, Optional[Union[str, InnerNode]]]]:
         params = self.parameter_list()

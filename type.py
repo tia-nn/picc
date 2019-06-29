@@ -2,7 +2,7 @@ from typing import List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
-TYPES = '.func', 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
+TYPES = '.ptr', '.func', 'void', 'char', 'short', 'int', 'long', 'long long', 'float', 'double', '_Bool', '_Complex'
 STORAGE_CLASS_SPECIFIER = 'typedef', 'extern', 'static', '_Thread_local', 'auto', 'register'
 TYPE_SPECIFIER = 'void', 'char', 'short', 'int', 'long', 'float', 'double', \
                  'signed', 'unsigned', '_Bool', '_Complex'
@@ -15,7 +15,7 @@ REAL_NUMBER_TYPE = 'short', 'int', 'long', 'long long', 'float', 'double'
 
 TYPE_SIZE = {
     '.ptr': 8,
-    'void': 0,
+    'void': 8,
     'char': 1,
     'short': 4,
     'int': 4,
@@ -72,6 +72,10 @@ class Type:
     @property
     def is_func(self):
         return self.ty == '.func'
+
+    @property
+    def is_ptr(self):
+        return self.ty in ('.ptr', )
 
     def __repr__(self):
         fs = ('ty', 'signed', 'ptr_to', 'array_size', 'storage_class', 'thread_local',

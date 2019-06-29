@@ -240,6 +240,16 @@ class Generator:
             print('  mov QWORD PTR [rdi], rax')
             return
 
+        if node.ty == ND.LEA:
+            self.gen_addr(node.lhs)
+            return
+
+        if node.ty == ND.REF:
+            self.gen(node.lhs)
+            print('  pop rax')
+            print('  push QWORD PTR [rax]')
+            return
+
         if node.ty == '=':
             self.gen_addr(node.lhs)
             self.gen(node.rhs)
