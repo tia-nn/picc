@@ -11,6 +11,22 @@ SIZE_NAME = {
     8: 'QWORD',
 }
 arg_register = 'rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9'
+RAX = {1: 'al', 2: 'ax', 4: 'eax', 8: 'rax'}
+RDI = {2: 'di', 4: 'edi', 8: 'rdi'}
+RSI = {2: 'si', 4: 'esi', 8: 'rsi'}
+RDX = {1: 'dl', 2: 'dx', 4: 'edx', 8: 'rdx'}
+RCX = {1: 'cl', 2: 'cx', 4: 'ecx', 8: 'rcx'}
+R8 = {1: 'r8b', 2: 'r8w', 4: 'r8d', 8: 'r8'}
+R9 = {1: 'r9b', 2: 'r9w', 4: 'r9d', 8: 'r9'}
+REGISTER = {
+    'rax': RAX,
+    'rdi': RDI,
+    'rsi': RSI,
+    'rdx': RDX,
+    'rcx': RCX,
+    'r8': R8,
+    'r9': R9,
+}
 
 
 class Generator:
@@ -72,10 +88,10 @@ class Generator:
 
             if node.args is not None:
                 for i, k in enumerate(node.args):
-                    _, o = self.scope.get(k)
+                    t, o = self.scope.get(k)
                     print('  mov rax, rbp')
                     print('  sub rax,', o)
-                    print('  mov QWORD PTR [rax],', arg_register[i])
+                    print(f'  mov {SIZE_NAME[t.size]} PTR [rax],', REGISTER[arg_register[i]][t.size])
 
             for i in node.stmts:
                 self.gen(i)
@@ -208,7 +224,14 @@ class Generator:
         if node.ty == ND.IDE:
             self.gen_addr(node)
             print('  pop rax')
-            print(f'  push {SIZE_NAME[node.type.size]} PTR [rax]')
+            if node.type.size < 4:
+                if node.type.signed:
+                    print(f'  movax rax, {SIZE_NAME[node.type.size]} PTR [rax]')
+                else:
+                    print(f'  movzx rax, {SIZE_NAME[node.type.size]} PTR [rax]')
+            else:
+                print(f'  mov {RAX[node.type.size]}, {SIZE_NAME[node.type.size]} PTR [rax]')
+            print(f'  push rax')
             return
 
         if node.ty == ND.CALL:
@@ -225,19 +248,31 @@ class Generator:
         if node.ty == '++':
             self.gen_addr(node.lhs)
             print('  pop rdi')
-            print('  push QWORD PTR [rdi]')
-            print('  mov rax, QWORD PTR [rdi]')
+            if node.type.size < 4:
+                if node.type.signed:
+                    print(f'  movax rax, {SIZE_NAME[node.type.size]} PTR [rdi]')
+                else:
+                    print(f'  movzx rax, {SIZE_NAME[node.type.size]} PTR [rdi]')
+            else:
+                print(f'  mov {RAX[node.type.size]}, {SIZE_NAME[node.type.size]} PTR [rdi]')
+            print('  push rax')
             print('  add rax, 1')
-            print('  mov QWORD PTR [rdi], rax')
+            print(f'  mov {SIZE_NAME[node.type.size]} PTR [rdi], {RAX[node.type.size]}')
             return
 
         if node.ty == '--':
             self.gen_addr(node.lhs)
             print('  pop rdi')
-            print('  push QWORD PTR [rdi]')
-            print('  mov rax, QWORD PTR [rdi]')
+            if node.type.size < 4:
+                if node.type.signed:
+                    print(f'  movax rax, {SIZE_NAME[node.type.size]} PTR [rdi]')
+                else:
+                    print(f'  movzx rax, {SIZE_NAME[node.type.size]} PTR [rdi]')
+            else:
+                print(f'  mov {RAX[node.type.size]}, {SIZE_NAME[node.type.size]} PTR [rdi]')
+            print('  push rax')
             print('  sub rax, 1')
-            print('  mov QWORD PTR [rdi], rax')
+            print(f'  mov {SIZE_NAME[node.type.size]} PTR [rdi], {RAX[node.type.size]}')
             return
 
         if node.ty == ND.LEA:
@@ -247,7 +282,14 @@ class Generator:
         if node.ty == ND.REF:
             self.gen(node.lhs)
             print('  pop rax')
-            print('  push QWORD PTR [rax]')
+            if node.lhs.type.size < 4:
+                if node.type.signed:
+                    print(f'  movax rax, {SIZE_NAME[node.lhs.type.size]} PTR [rax]')
+                else:
+                    print(f'  movzx rax, {SIZE_NAME[node.lhs.type.size]} PTR [rax]')
+            else:
+                print(f'  mov {RAX[node.type.size]}, {SIZE_NAME[node.type.size]} PTR [rax]')
+            print(f'  push rax')
             return
 
         if node.ty == '=':
@@ -255,7 +297,7 @@ class Generator:
             self.gen(node.rhs)
             print('  pop rdi')
             print('  pop rax')
-            print(f'  mov {SIZE_NAME[node.lhs.type.size]} PTR [rax], rdi')  # todo: 右のレジスタのサイズを調整
+            print(f'  mov {SIZE_NAME[node.lhs.type.size]} PTR [rax], {RDI[node.lhs.type.size]}')  # todo: 右のレジスタのサイズを調整
             print('  push rdi')
             return
 

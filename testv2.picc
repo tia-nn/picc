@@ -113,3 +113,19 @@ long main() {
     a = 10;
     return *b;
 } $ 10 $$
+
+int main() {
+    int a;
+    long b;
+    a = 10;
+    b = 5;
+    return a + b;
+} $ 15 $$
+
+int main() {
+    long a;
+    short b;
+    b = 10;
+    a = b;
+    return a;
+} $ 10 $$

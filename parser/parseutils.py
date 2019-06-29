@@ -272,6 +272,9 @@ class ParseUtils:
         if long and short:
             raise TypeError('longとshortが同時に指定されています')
 
+        if not_arithmetic:
+            return t
+
         if not long and not short:
             t.ty = 'int'
             return t
