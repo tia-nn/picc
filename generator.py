@@ -57,6 +57,9 @@ class Generator:
             print('  sub rax,', offset)
             print('  push rax')
             return
+        if node.ty == ND.REF:
+            self.gen(node.lhs)
+            return
         raise TypeError
 
     def gen(self, node: Node):
@@ -308,7 +311,6 @@ class Generator:
             return
 
         # 二項演算子
-
         self.gen(node.lhs)
         self.gen(node.rhs)
         print('  pop rdi')

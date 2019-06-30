@@ -6,9 +6,10 @@ from utils import debug, warning
 
 from parser.parseutils import *
 from parser.tokenparser import TokenParser
+from parser.subexpressionparser import SubExpressionParser
 
 
-class ExpressionParser(TokenParser):
+class ExpressionParser(TokenParser, SubExpressionParser):
     # expression
 
     def primary_expression(self) -> Node:
@@ -27,6 +28,14 @@ class ExpressionParser(TokenParser):
 
         while True:
 
+            if self.consume('['):
+                exp = self.expression()
+                self.consume_must(']')
+                if not postfix.type.is_ptr and not exp.type.is_ptr:
+                    TypeError('ポインタ以外を配列参照しています')
+                node = self.sub_add(postfix, exp)
+                postfix = Node(ND.REF, type=node.type.ptr_to, lhs=node)
+                continue
             if self.consume('('):
                 if postfix.type.ty == '.unknown':
                     warning(postfix.val, '関数の暗黙的宣言(返り値をlongにします)')
@@ -92,7 +101,7 @@ class ExpressionParser(TokenParser):
                 if not node.type.is_ptr:
                     raise TypeError('ポインタ以外を参照解決しています')
                 unary = Node(ND.REF, type=node.type.ptr_to, lhs=node)
-
+                continue
             if self.consume('+'):
                 unary = self.cast_expression()
                 if not unary.type.is_arithmetic():
@@ -132,21 +141,15 @@ class ExpressionParser(TokenParser):
         while True:
             if self.consume('*'):
                 rhs = self.cast_expression()
-                if not mul.type.is_arithmetic() or not rhs.type.is_arithmetic():
-                    raise TypeError('乗法演算子*に算術型以外が指定されています')
-                mul = Node('*', type=mul.type, lhs=mul, rhs=rhs)
+                mul = self.sub_mul(mul, rhs)
                 continue
             if self.consume('/'):
                 rhs = self.cast_expression()
-                if not mul.type.is_arithmetic() or not rhs.type.is_arithmetic():
-                    raise TypeError('除法演算子/に算術型以外が指定されています')
-                mul = Node('/', type=mul.type, lhs=mul, rhs=rhs)
+                mul = self.sub_div(mul, rhs)
                 continue
             if self.consume('%'):
                 rhs = self.cast_expression()
-                if not mul.type.is_integer() or not rhs.type.is_integer():
-                    raise TypeError('剰余演算子%に整数型以外が指定されています')
-                mul = Node('%', type=mul.type, lhs=mul, rhs=rhs)
+                mul = self.sub_sur(mul, rhs)
                 continue
             break
 
@@ -158,20 +161,13 @@ class ExpressionParser(TokenParser):
         while True:
             if self.consume('+'):
                 rhs = self.multiple_expression()
-                # TODO: 片方がポインタならもう片方は整数型 http://port70.net/~nsz/c/c11/n1570.html#6.5.6p2
-                if not Type.both_arithmetic(add.type, rhs.type):
-                    debug(add.type)
-                    raise TypeError('加算+に算術型以外が指定されています')
-                add = Node('+', type=add.type, lhs=add, rhs=rhs)
+                add = self.sub_add(add, rhs)
                 continue
             if self.consume('-'):
                 rhs = self.multiple_expression()
-                if not Type.both_arithmetic(add.type, rhs.type):
-                    raise TypeError('減算-に算術型以外が指定されています')
-                add = Node('-', type=add.type, lhs=add, rhs=rhs)
+                add = self.sub_sub(add, rhs)
                 continue
             break
-
         return add
 
     def shift_expression(self) -> Node:
@@ -483,3 +479,5 @@ class ExpressionParser(TokenParser):
 
         res = gen_constant(constant)
         return Node(ND.INT, type=t_signed_int, val=res)
+
+

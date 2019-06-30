@@ -54,6 +54,13 @@ class Node:
     scope: 'Scope' = None
     args: Dict[str, Tuple[Type, int]] = None
 
+    def __repr__(self):
+        fs = ('ty', 'val', 'lhs', 'rhs', 'condition', 'init', 'proc',
+              'd_init_list', 'call', 'call_args', 'stmts', 'block', 'else_block',
+              'scope', 'args', 'type')
+        fs = (i for i in fs if getattr(self, i) is not None)
+        return f'({" ".join([i + "=" + repr(getattr(self, i)) for i in fs])})'
+
 
 @dataclass
 class InnerNode:

@@ -129,3 +129,18 @@ int main() {
     a = b;
     return a;
 } $ 10 $$
+
+int main() {
+    int *a = malloc(8);
+    *a = 10;
+    *(a+1) = 20;
+    return (*a) + *(a+1);
+} $ 30 $$
+
+int main() {
+    int *a = malloc(12);
+    a[0] = 10;
+    a[1] = 20;
+    a[2] = 30;
+    return a[0] + a[1] + 2[a];
+} $ 60 $$

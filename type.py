@@ -79,7 +79,8 @@ class Type:
 
     def __repr__(self):
         fs = ('ty', 'signed', 'ptr_to', 'array_size', 'storage_class', 'thread_local',
-              'const', 'restrict', 'volatile', 'atomic', 'inline', 'noreturn')
+              'const', 'restrict', 'volatile', 'atomic', 'inline', 'noreturn',
+              'func_call_to', 'param_list')
         fs = (i for i in fs if getattr(self, i) is not None)
         return f'[{" ".join([i+"="+repr(getattr(self, i)) for i in fs])}]'
 
