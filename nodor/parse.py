@@ -5,7 +5,7 @@ import re
 
 from tokenor.tokenor import Token, TokenType, Tokenizer
 from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError
-from .node import Node, Integer, Number
+from .node import *
 
 
 integer_re = re.compile(r'^(?P<prefix>0[a-zA-Z]?)?(?P<value>[0-9a-fA-F]+)(?P<suffix>[a-zA-Z]+)?$')
@@ -19,14 +19,23 @@ class Nodor(BaseParser):
     def parse(self, tokens: List[Token]) -> Node:
         self.tokens = tokens
         self.p = 0
-        return self.integer()
+        return self.add()
 
-    def integer(self) -> Integer:
+    def add(self) -> Expression:
+        result = self.number()
+        while True:
+            if (token := self.consume('+')):
+                result = Add(result, self.add())
+                continue
+            break
+        return result
+
+    def number(self) -> Number:
         if self.token().type == TokenType.NUMBER:
             num = NumberParser().parse(self.token())
             self.p += 1
             return num
-        raise Unmatch(self.p, 'not integer')
+        raise Unmatch(self.p, 'not number')
 
 
 class NumberParser(TokenParser):
@@ -44,10 +53,14 @@ class NumberParser(TokenParser):
 
         v = m.groupdict()
         prefix, value, suffix = v['prefix'], v['value'], v['suffix']
+        if prefix is not None:
+            prefix = prefix.lower()
+        if suffix is not None:
+            suffix = suffix.lower()
 
-        if prefix not in (None, '0x', '0X', '0', '0o', '0O', '0b', '0B'):
+        if prefix not in (None, '0x', '0', '0o', '0b'):
             raise ParseError(0, f'unknown integer prefix: {prefix}')
-        if suffix not in (None, 'll', 'LL', 'l', 'L', 'u', 'U'):
+        if suffix not in (None, 'll', 'l', 'u', 'llu', 'ull', 'ul', 'lu'):
             raise ParseError(len(prefix or '') + len(value), f'unknown suffix: {suffix}')
 
         try:

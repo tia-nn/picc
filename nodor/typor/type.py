@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
 
-__all__ = ['storage_class', 'QUALIFIER', 'Int']
+__all__ = ['storage_class', 'QUALIFIER', 'Type', 'Int']
 
 
 storage_class = namedtuple('storage_class', ('typedef', 'extern', 'static', 'thread_local', 'auto', 'register'))
@@ -91,7 +91,7 @@ class Align(metaclass=ABCMeta):
 
 class Base(StorageClass, Qualifier, Align, metaclass=ABCMeta):
     size: int = None
-    is_literal = False
+    is_literal_or_calc = False
 
 
 class Arithmetic(Base, metaclass=ABCMeta):
@@ -100,21 +100,21 @@ class Arithmetic(Base, metaclass=ABCMeta):
 
 class Int(Arithmetic):
 
-    def __init__(self, size: int, signed: bool, is_literal, storage_classes: Optional[storage_class], qualifier: Optional[QUALIFIER], align: Optional[Union[str, 'Node']] = None):
+    def __init__(self, size: int, signed: bool, is_literal_or_calc: bool, storage_classes: Optional[storage_class], qualifier: Optional[QUALIFIER], align: Optional[Union[str, 'Node']] = None):
         self.size = size
         self.signed = signed
-        self.is_literal = is_literal
-        if not is_literal:
+        self.is_literal_or_calc = is_literal_or_calc
+        if not is_literal_or_calc:
             self.set_storage_class(storage_classes)
             self.set_qualifier(qualifier)
 
     def __str__(self):
-        if not self.is_literal:
+        if not self.is_literal_or_calc:
             storage = StorageClass.__str__(self)
             qual = Qualifier.__str__(self)
         else:
             storage = ''
-            qual = 'literal'
+            qual = 'literalOrCalc'
         u = '' if self.signed else 'u'
         size = str(self.size)
 
@@ -122,6 +122,9 @@ class Int(Arithmetic):
 
     def __repr__(self):
         return str(self)
+
+
+Type = Union[Int]
 
 
 # from ..node import Node

@@ -1,7 +1,10 @@
-from typing import List, Callable, Union, Sequence
+from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar
 
 from tokenor.tokenor import Token
 from .node import Node
+
+
+T = TypeVar('T')
 
 
 class Unmatch(Exception):
@@ -18,6 +21,13 @@ class ParseError(Exception):
     def __init__(self, position, info):
         super().__init__(info)
         self.position = position
+
+
+def unmatch_is_error(fn: Callable[[], T]) -> T:
+    try:
+        return fn()
+    except Unmatch as e:
+        raise ParseError(e.position, *e.args)
 
 
 class Base:
@@ -37,6 +47,16 @@ class BaseParser(Base):
 
     def token(self) -> Token:
         return self.tokens[self.p]
+
+    def consume(self, token_type) -> Union[Token, bool]:
+        try:
+            token = self.token()
+        except IndexError:
+            return False
+        if token == token_type:
+            self.p += 1
+            return token
+        return False
 
 
 class TokenParser(Base):

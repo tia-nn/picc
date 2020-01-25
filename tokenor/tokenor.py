@@ -18,6 +18,13 @@ class Token:
     type: Union[str, TokenType]
     value: Any = None
 
+    def __bool__(self):
+        try:
+            self.type
+            return True
+        except AttributeError:
+            return False
+
 
 class TokenizeError(Exception):
     position: int = None
@@ -39,9 +46,13 @@ class Tokenizer:
 
         while p < code_len:
             c = code[p]
-            print(c)
 
             if c in whitespace:
+                p += 1
+                continue
+
+            if c in token_single:
+                tokens.append(c)
                 p += 1
                 continue
 

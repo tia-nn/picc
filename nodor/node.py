@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Union
-from .typor.type import Int
+from .typor.type import Int, Type
 
 
 # def add_type_field(c: 'Node'):
@@ -19,7 +19,27 @@ class Integer:
     suffix: str
     type: 'Int' = None
 
+    def __str__(self):
+        return str(self.type) + ' ' + str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+
+@dataclass
+class Add:
+    left: 'Node'
+    right: 'Node'
+    type: 'Type' = None
+
+    def __str__(self):
+        return '((' + str(self.type) + ')' + str(self.left) + ' + ' + str(self.right) + ')'
+
+    def __repr__(self):
+        return str(self)
+
+
+Node = Union[Integer, Add]
 
 Number = Union[Integer]
-
-Node = Union[Number]
+Expression = Union[Number, Add]
