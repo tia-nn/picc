@@ -1,6 +1,12 @@
 venv
 __pycache__
 test.c
+test*
 a.out
 syntax.bnf
 .idea
+tmp*
+
+# とりあえず
+
+generator/phase1.py
