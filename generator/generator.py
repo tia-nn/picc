@@ -37,4 +37,14 @@ class Generator:
             print('add rax, rdi')
             return
 
+        if isinstance(node, node_type.Mul):
+            self.gen(node.left)
+            print('push rax')
+            self.gen(node.right)
+            print('mov rdi, rax')
+            print('pop rax')
+            print('mov edx, 0')
+            print('mul rdi')
+            return
+
         raise GenerateError(f'unknown node: {node}')

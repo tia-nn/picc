@@ -4,7 +4,7 @@ from string import hexdigits, octdigits, digits
 import re
 
 from tokenor.tokenor import Token, TokenType, Tokenizer
-from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError
+from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError, unmatch_is_error
 from .node import *
 
 
@@ -22,10 +22,19 @@ class Nodor(BaseParser):
         return self.add()
 
     def add(self) -> Expression:
-        result = self.number()
+        result = self.mul()
         while True:
             if (token := self.consume('+')):
-                result = Add(result, self.add())
+                result = Add(result, self.mul())
+                continue
+            break
+        return result
+
+    def mul(self) -> Expression:
+        result = self.number()
+        while True:
+            if (token := self.consume('*')):
+                result = Mul(result, self.number())
                 continue
             break
         return result

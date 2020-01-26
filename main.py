@@ -1,4 +1,4 @@
-from sys import argv
+from sys import argv, stderr
 
 from nodor.parse import Nodor
 from tokenor.tokenor import Tokenizer
@@ -12,6 +12,8 @@ if __name__ == '__main__':
     node = Nodor().parse(Tokenizer.tokenize(code))
     typor.Typor().type(node)
     Generator().generate(node)
+
+    # stderr.write(str(node))
 
     # while True:
     #     node = Nodor().parse(Tokenizer.tokenize(input()))

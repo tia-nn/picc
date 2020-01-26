@@ -27,7 +27,7 @@ class Integer:
 
 
 @dataclass
-class Add:
+class BinaryOperator:
     left: 'Node'
     right: 'Node'
     type: 'Type' = None
@@ -39,7 +39,17 @@ class Add:
         return str(self)
 
 
-Node = Union[Integer, Add]
+@dataclass
+class Add(BinaryOperator):
+    pass
+
+
+@dataclass
+class Mul(BinaryOperator):
+    pass
+
+
+Node = Union[Integer, Add, Mul]
 
 Number = Union[Integer]
-Expression = Union[Number, Add]
+Expression = Union[Number, Add, Mul]
