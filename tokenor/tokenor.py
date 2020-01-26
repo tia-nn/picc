@@ -16,6 +16,7 @@ class TokenType(Enum):
 @dataclass
 class Token:
     type: Union[str, TokenType]
+    position: int
     value: Any = None
 
     def __bool__(self):
@@ -39,7 +40,7 @@ class TokenizeError(Exception):
 class Tokenizer:
 
     @staticmethod
-    def tokenize(code):
+    def tokenize(code) -> List[Token]:
         p = 0
         code_len = len(code)
         tokens = []
@@ -52,16 +53,17 @@ class Tokenizer:
                 continue
 
             if c in token_single:
-                tokens.append(c)
+                tokens.append(Token(c, p))
                 p += 1
                 continue
 
             if c in digits:
                 num = ''
+                first_p = p
                 while p < code_len and (c := code[p]) in number_literal_chars:
                     num += c
                     p += 1
-                tokens.append(Token(TokenType.NUMBER, num))
+                tokens.append(Token(TokenType.NUMBER, first_p, num))
                 continue
 
             raise TokenizeError(p, f'unknown token char: {c}')

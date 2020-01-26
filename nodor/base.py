@@ -23,11 +23,11 @@ class ParseError(Exception):
         self.position = position
 
 
-def unmatch_is_error(fn: Callable[[], T]) -> T:
+def unmatch_is_error(fn: Callable[[], T], info: str = None) -> T:
     try:
         return fn()
     except Unmatch as e:
-        raise ParseError(e.position, *e.args)
+        raise ParseError(e.position, *([info] if info is not None else e.args))
 
 
 class Base:
@@ -46,14 +46,17 @@ class BaseParser(Base):
     tokens: List[Token]
 
     def token(self) -> Token:
-        return self.tokens[self.p]
+        try:
+            return self.tokens[self.p]
+        except IndexError:
+            raise Unmatch(self.p, 'token index out of range')
 
     def consume(self, token_type) -> Union[Token, bool]:
         try:
             token = self.token()
-        except IndexError:
+        except Unmatch:
             return False
-        if token == token_type:
+        if token.type == token_type:
             self.p += 1
             return token
         return False

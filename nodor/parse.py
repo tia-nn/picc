@@ -25,7 +25,7 @@ class Nodor(BaseParser):
         result = self.mul()
         while True:
             if (token := self.consume('+')):
-                result = Add(result, self.mul())
+                result = Add(result, unmatch_is_error(self.mul, 'no left operand'))
                 continue
             break
         return result
@@ -34,7 +34,7 @@ class Nodor(BaseParser):
         result = self.number()
         while True:
             if (token := self.consume('*')):
-                result = Mul(result, self.number())
+                result = Mul(result, unmatch_is_error(self.number))
                 continue
             break
         return result
