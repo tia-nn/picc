@@ -1,4 +1,5 @@
 from sys import argv, stderr
+from typing import List
 
 from nodor.parse import Nodor, ParseError
 from tokenor.tokenor import Tokenizer, TokenizeError
@@ -9,6 +10,8 @@ from generator.generator import Generator, GenerateError
 if __name__ == '__main__':
     file_name = 'main.c'
     code = open(file_name).read()
+    node: List['Node'] = None
+    token: List['Token'] = None
     try:
         token = Tokenizer.tokenize(code)
     except TokenizeError as e:
@@ -23,7 +26,7 @@ if __name__ == '__main__':
         except IndexError:
             stderr.write(f'{len(code)}: {e.args}')
         exit(1)
-    typor.Typor().type(node)
+    typor.Typor().typing(node)
     Generator().generate(node)
 
 

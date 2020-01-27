@@ -53,3 +53,4 @@ Node = Union[Integer, Add, Mul]
 
 Number = Union[Integer]
 Expression = Union[Number, Add, Mul]
+Statement = Union[Expression]

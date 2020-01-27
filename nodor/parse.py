@@ -16,9 +16,21 @@ number_suffix_re = re.compile(r'^(?P<suffix>[a-zA-Z]+)?$')
 
 class Nodor(BaseParser):
 
-    def parse(self, tokens: List[Token]) -> Node:
+    def parse(self, tokens: List[Token]) -> List[Node]:
         self.tokens = tokens
         self.p = 0
+        nodes = []
+        while not self.consume(TokenType.EOF):
+            nodes.append(self.expression_statement())
+        return nodes
+
+    def expression_statement(self) -> Statement:
+        result = self.expression()
+        if not self.consume(';'):
+            raise ParseError(self.p, 'expression statement: no ";"')
+        return result
+
+    def expression(self):
         return self.add()
 
     def add(self) -> Expression:

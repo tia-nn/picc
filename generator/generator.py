@@ -11,7 +11,8 @@ class GenerateError(Exception):
 
 
 class Generator:
-    def generate(self, node: Node):
+
+    def generate(self, nodes: List[Node]):
         print('section .text')
         print('global _start')
         print('_start:')
@@ -20,7 +21,8 @@ class Generator:
         print('mov rax, 60')
         print('syscall')
         print('main:')
-        self.gen(node)
+        for node in nodes:
+            self.gen(node)
         print('ret')
 
     def gen(self, node: Node):

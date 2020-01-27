@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from .. import node as node_type
 from ..node import Node
@@ -15,7 +15,12 @@ class TypingError(Exception):
 
 class Typor:
 
+    def typing(self, nodes: List) -> None:
+        for node in nodes:
+            self.type(node)
+
     def type(self, node: Node) -> node_type.Type:
+
         if isinstance(node, node_type.Integer):
             suffix = '' if node.suffix is None else node.suffix.lower()
             signed = 'u' not in suffix

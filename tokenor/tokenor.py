@@ -6,11 +6,12 @@ import re
 
 
 number_literal_chars = set(digits + ascii_letters + '.')
-token_single = '+*'
+token_single = '+*;'
 
 
 class TokenType(Enum):
     NUMBER = auto()
+    EOF = auto()
 
 
 @dataclass
@@ -68,4 +69,5 @@ class Tokenizer:
 
             raise TokenizeError(p, f'unknown token char: {c}')
 
+        tokens.append(Token(TokenType.EOF, p))
         return tokens
