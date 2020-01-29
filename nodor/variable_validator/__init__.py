@@ -30,3 +30,15 @@ class VariableValidator(Crawler):
             node.type = var.type
         except NotExist:
             raise VarNameError(node.position, f'name {node.name} is not defined')
+
+    def assign(self, node: node_type.Assign):
+        self.check(node.left)
+        self.check(node.right)
+
+    def add(self, node: node_type.Add):
+        self.check(node.left)
+        self.check(node.right)
+
+    def mul(self, node: node_type.Mul):
+        self.check(node.left)
+        self.check(node.right)

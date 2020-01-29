@@ -41,14 +41,14 @@ class Crawler(metaclass=ABCMeta):
     def variable(self, node: node_type.Variable):
         raise NotImplementedError
 
+    @abstractmethod
     def assign(self, node: node_type.Assign):
-        self.check(node.left)
-        self.check(node.right)
+        raise NotImplementedError
 
+    @abstractmethod
     def add(self, node: node_type.Add):
-        self.check(node.left)
-        self.check(node.right)
+        raise NotImplementedError
 
+    @abstractmethod
     def mul(self, node: node_type.Mul):
-        self.check(node.left)
-        self.check(node.right)
+        raise NotImplementedError

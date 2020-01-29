@@ -61,6 +61,12 @@ class BaseParser(Base):
             return token
         return False
 
+    def binary_expression(self, fn: Callable[[], Node], token: str, nd: Callable[[int, Node, Node], Node]) -> Node:
+        result = fn()
+        while (token := self.consume(token)):
+            result = nd(self.p, result, unmatch_is_error(fn, 'no left operand'))
+        return result
+
 
 class TokenParser(Base):
     code: str

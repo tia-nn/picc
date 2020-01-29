@@ -2,13 +2,14 @@ from typing import List
 
 import nodor.node as node_type
 from nodor.node import Node
+from crawler import Crawler
 
 
 class GenerateError(Exception):
     pass
 
 
-class Generator:
+class Generator(Crawler):
 
     def generate(self, nodes: List[Node]):
         print('section .text')
@@ -24,8 +25,7 @@ class Generator:
         for i in range(26):
             print(f'mov rax, {i}')
             print('push rax')
-        for node in nodes:
-            self.gen(node)
+        self.crawl(nodes)
         print('leave')
         print('ret')
 
@@ -34,40 +34,40 @@ class Generator:
         return
 
     def gen(self, node: Node):
-        if isinstance(node, node_type.Integer):
-            print(f'mov rax, {node.value & 0xffffffffffffffff}')
-            return
+        return self.check(node)
 
-        if isinstance(node, node_type.Variable):
-            self.gen_addr(node)
-            print('mov rax, [rax]')
-            return
+    def integer(self, node: node_type.Integer):
+        print(f'mov rax, {node.value & 0xffffffffffffffff}')
+        return
 
-        if isinstance(node, node_type.Assign):
-            self.gen_addr(node.left)
-            print('push rax')
-            self.gen(node.right)
-            print('pop rdi')
-            print('mov [rdi], rax')
-            return
+    def variable(self, node: node_type.Variable):
+        self.gen_addr(node)
+        print('mov rax, [rax]')
+        return
 
-        if isinstance(node, node_type.Add):
-            self.gen(node.left)
-            print('push rax')
-            self.gen(node.right)
-            print('mov rdi, rax')
-            print('pop rax')
-            print('add rax, rdi')
-            return
+    def assign(self, node: node_type.Assign):
+        self.gen_addr(node.left)
+        print('push rax')
+        self.gen(node.right)
+        print('pop rdi')
+        print('mov [rdi], rax')
+        return
 
-        if isinstance(node, node_type.Mul):
-            self.gen(node.left)
-            print('push rax')
-            self.gen(node.right)
-            print('mov rdi, rax')
-            print('pop rax')
-            print('mov edx, 0')
-            print('mul rdi')
-            return
+    def add(self, node: node_type.Add):
+        self.gen(node.left)
+        print('push rax')
+        self.gen(node.right)
+        print('mov rdi, rax')
+        print('pop rax')
+        print('add rax, rdi')
+        return
 
-        raise GenerateError(f'unknown node: {node}')
+    def mul(self, node: node_type.Mul):
+        self.gen(node.left)
+        print('push rax')
+        self.gen(node.right)
+        print('mov rdi, rax')
+        print('pop rax')
+        print('mov edx, 0')
+        print('mul rdi')
+        return

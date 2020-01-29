@@ -42,22 +42,10 @@ class Nodor(BaseParser):
         return result
 
     def add(self) -> Expression:
-        result = self.mul()
-        while True:
-            if (token := self.consume('+')):
-                result = Add(self.p, result, unmatch_is_error(self.mul, 'no left operand'))
-                continue
-            break
-        return result
+        return self.binary_expression(self.mul, '+', Add)
 
     def mul(self) -> Expression:
-        result = self.primary_expression()
-        while True:
-            if (token := self.consume('*')):
-                result = Mul(self.p, result, unmatch_is_error(self.primary_expression, 'no left operand'))
-                continue
-            break
-        return result
+        return self.binary_expression(self.primary_expression, '*', Mul)
 
     def primary_expression(self) -> PrimaryExpression:
         return self.select(self.number, self.variable)
