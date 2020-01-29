@@ -1,12 +1,12 @@
 from sys import argv, stderr
 from typing import List
 
-from nodor.parse import Nodor, ParseError
 from tokenor.tokenor import Tokenizer, TokenizeError
-from nodor.variable_validator import variable_validator
+from nodor import Nodor, ParseError
+from nodor import variable_validator
 from nodor.variable_validator.variable import NotExist
-from nodor.typor import typor
-from generator.generator import Generator, GenerateError
+from nodor import typor
+from generator import Generator, GenerateError
 
 
 if __name__ == '__main__':
