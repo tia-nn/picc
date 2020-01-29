@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from string import hexdigits, octdigits, digits
 import re
 
-from tokenor.tokenor import Token, TokenType, Tokenizer
+from tokenor import Token, TokenType, Tokenizer
 from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError, unmatch_is_error
 from .node import *
 

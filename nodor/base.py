@@ -1,6 +1,6 @@
 from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar
 
-from tokenor.tokenor import Token
+from tokenor import Token
 from .node import Node
 
 

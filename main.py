@@ -1,7 +1,7 @@
 from sys import argv, stderr
 from typing import List
 
-from tokenor.tokenor import Tokenizer, TokenizeError
+from tokenor import Tokenizer, TokenizeError
 from nodor import Nodor, ParseError
 from nodor import variable_validator
 from nodor.variable_validator.scope import NotExist
