@@ -30,7 +30,16 @@ class Nodor(BaseParser):
         return result
 
     def expression(self):
-        return self.add()
+        return self.assign()
+
+    def assign(self) -> Expression:
+        result = self.add()
+        while True:
+            if (token := self.consume('=')):
+                result = Assign(self.p, result, unmatch_is_error(self.assign, 'no left operand'))
+                continue
+            break
+        return result
 
     def add(self) -> Expression:
         result = self.mul()
@@ -45,7 +54,7 @@ class Nodor(BaseParser):
         result = self.primary_expression()
         while True:
             if (token := self.consume('*')):
-                result = Mul(self.p, result, unmatch_is_error(self.primary_expression))
+                result = Mul(self.p, result, unmatch_is_error(self.primary_expression, 'no left operand'))
                 continue
             break
         return result

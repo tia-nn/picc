@@ -6,7 +6,7 @@ import re
 
 
 number_literal_chars = set(digits + ascii_letters + '.')
-token_single = '+*;' + ascii_lowercase
+token_single = '+*;=' + ascii_lowercase
 
 
 class TokenType(Enum):

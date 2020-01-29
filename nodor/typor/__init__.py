@@ -31,6 +31,15 @@ class Typor:
             # variableValidateで見てる
             return node.type
 
+        if isinstance(node, node_type.Assign):
+            l_type = self.type(node.left)
+            r_type = self.type(node.right)
+
+            # TODO: is_assignable
+
+            node.type = l_type
+            return node.type
+
         if isinstance(node, node_type.Add):
             l_type = self.type(node.left)
             r_type = self.type(node.right)

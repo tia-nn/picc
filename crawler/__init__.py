@@ -22,6 +22,9 @@ class Crawler(metaclass=ABCMeta):
         if isinstance(node, node_type.Variable):
             return self.variable(node)
 
+        if isinstance(node, node_type.Assign):
+            return self.assign(node)
+
         if isinstance(node, node_type.Add):
             return self.add(node)
 
@@ -37,6 +40,10 @@ class Crawler(metaclass=ABCMeta):
     @abstractmethod
     def variable(self, node: node_type.Variable):
         raise NotImplementedError
+
+    def assign(self, node: node_type.Assign):
+        self.check(node.left)
+        self.check(node.right)
 
     def add(self, node: node_type.Add):
         self.check(node.left)

@@ -43,6 +43,14 @@ class Generator:
             print('mov rax, [rax]')
             return
 
+        if isinstance(node, node_type.Assign):
+            self.gen_addr(node.left)
+            print('push rax')
+            self.gen(node.right)
+            print('pop rdi')
+            print('mov [rdi], rax')
+            return
+
         if isinstance(node, node_type.Add):
             self.gen(node.left)
             print('push rax')

@@ -64,9 +64,14 @@ class Mul(BinaryOperator):
     _operator: str = '*'
 
 
+@dataclass
+class Assign(BinaryOperator):
+    _operator: str = '='
+
+
 Node = Union[Integer, Add, Mul]
 
 Number = Union[Integer]
 PrimaryExpression = Union[Number, Variable]
-Expression = Union[PrimaryExpression, Add, Mul]
+Expression = Union[PrimaryExpression, Assign, Add, Mul]
 Statement = Union[Expression]
