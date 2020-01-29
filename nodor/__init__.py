@@ -48,7 +48,15 @@ class Nodor(BaseParser):
         return self.binary_expression(self.primary_expression, '*', Mul)
 
     def primary_expression(self) -> PrimaryExpression:
-        return self.select(self.number, self.variable)
+        return self.select(self.number, self.variable, self.bracket)
+
+    def bracket(self) -> Expression:
+        if self.consume('('):
+            result = self.expression()
+            if not self.consume(')'):
+                raise ParseError(self.p, 'no ")"')
+            return result
+        raise Unmatch(self.p, 'no "("')
 
     def number(self) -> Number:
         if self.token().type == TokenType.NUMBER:
