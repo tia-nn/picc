@@ -33,7 +33,7 @@ def unmatch_is_error(fn: Callable[[], T], info: str = None) -> T:
 class Base:
     p: int
 
-    def select(self, funcs: Sequence[Callable]):
+    def select(self, *funcs: Callable[[], T]) -> T:
         for i in range(len(funcs)):
             try:
                 return funcs[i]()

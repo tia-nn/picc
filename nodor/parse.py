@@ -37,40 +37,50 @@ class Nodor(BaseParser):
         result = self.mul()
         while True:
             if (token := self.consume('+')):
-                result = Add(result, unmatch_is_error(self.mul, 'no left operand'))
+                result = Add(self.p, result, unmatch_is_error(self.mul, 'no left operand'))
                 continue
             break
         return result
 
     def mul(self) -> Expression:
-        result = self.number()
+        result = self.primary_expression()
         while True:
             if (token := self.consume('*')):
-                result = Mul(result, unmatch_is_error(self.number))
+                result = Mul(self.p, result, unmatch_is_error(self.primary_expression))
                 continue
             break
         return result
 
+    def primary_expression(self) -> PrimaryExpression:
+        return self.select(self.number, self.variable)
+
     def number(self) -> Number:
         if self.token().type == TokenType.NUMBER:
-            num = NumberParser().parse(self.token())
+            num = NumberParser().parse(self.token(), self.p)
             self.p += 1
             return num
         raise Unmatch(self.p, 'not number')
+
+    def variable(self) -> Variable:
+        from string import ascii_lowercase
+        for i in ascii_lowercase:
+            if self.consume(i):
+                return Variable(self.p, i)
+        raise Unmatch(self.p, 'not variable')
 
 
 class NumberParser(TokenParser):
     base: dict = {None: 10, '0x': 16, '0X': 16, '0': 8, '0o': 8, '0O': 8, '0b': 2, '0B': 2}
 
-    def parse(self, token: Token) -> Number:
-        return self.integer(token.value)
+    def parse(self, token: Token, position: int) -> Number:
+        return self.integer(token.value, position)
 
     @staticmethod
-    def integer(s: str) -> Integer:
+    def integer(s: str, position: int) -> Integer:
         m = integer_re.match(s)
 
         if m is None:
-            raise Unmatch(0, 'not integer')
+            raise Unmatch(position, 'not integer')
 
         v = m.groupdict()
         prefix, value, suffix = v['prefix'], v['value'], v['suffix']
@@ -80,11 +90,11 @@ class NumberParser(TokenParser):
             suffix = suffix.lower()
 
         if prefix not in (None, '0x', '0', '0o', '0b'):
-            raise ParseError(0, f'unknown integer prefix: {prefix}')
+            raise ParseError(position, f'unknown integer prefix: {prefix}')
         if suffix not in (None, 'll', 'l', 'u', 'llu', 'ull', 'ul', 'lu'):
-            raise ParseError(len(prefix or '') + len(value), f'unknown suffix: {suffix}')
+            raise ParseError(position + len(prefix or '') + len(value), f'unknown suffix: {suffix}')
 
         try:
-            return Integer(int(value, base=NumberParser.base[prefix]), prefix, suffix)
+            return Integer(position, int(value, base=NumberParser.base[prefix]), prefix, suffix)
         except ValueError:
-            raise ParseError(len(prefix), f'there is a invalid char of base {NumberParser.base[prefix]} number')
+            raise ParseError(position + len(prefix), f'there is a invalid char of base {NumberParser.base[prefix]} number')

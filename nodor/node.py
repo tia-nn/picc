@@ -1,19 +1,16 @@
 from dataclasses import dataclass
 from typing import Union
 from .typor.type import Int, Type
+from abc import ABCMeta, abstractmethod
 
 
-# def add_type_field(c: 'Node'):
-#     @dataclass
-#     class TypedNode(c):
-#         type: Type = None
-#         __qualname__ = c.__qualname__
-#     return TypedNode
-
-
-# @add_type_field
 @dataclass
-class Integer:
+class BaseNode(metaclass=ABCMeta):
+    position: int
+
+
+@dataclass
+class Integer(BaseNode):
     value: int
     prefix: str
     suffix: str
@@ -27,13 +24,31 @@ class Integer:
 
 
 @dataclass
-class BinaryOperator:
+class Variable(BaseNode):
+    name: str
+    offset: int = None
+    type: 'Type' = None
+
+    def __str__(self):
+        return f'{str(self.type) if self.type is not None else "nonTyped"} {self.name}'
+
+    def __repr__(self):
+        return str(self)
+
+
+@dataclass
+class BinaryOperator(BaseNode, metaclass=ABCMeta):
     left: 'Node'
     right: 'Node'
     type: 'Type' = None
 
+    @property
+    @abstractmethod
+    def _operator(self):
+        raise NotImplementedError
+
     def __str__(self):
-        return '((' + str(self.type) + ')' + str(self.left) + ' + ' + str(self.right) + ')'
+        return '((' + str(self.type) + ')' + str(self.left) + f' {self._operator} ' + str(self.right) + ')'
 
     def __repr__(self):
         return str(self)
@@ -41,16 +56,17 @@ class BinaryOperator:
 
 @dataclass
 class Add(BinaryOperator):
-    pass
+    _operator: str = '+'
 
 
 @dataclass
 class Mul(BinaryOperator):
-    pass
+    _operator: str = '*'
 
 
 Node = Union[Integer, Add, Mul]
 
 Number = Union[Integer]
-Expression = Union[Number, Add, Mul]
+PrimaryExpression = Union[Number, Variable]
+Expression = Union[PrimaryExpression, Add, Mul]
 Statement = Union[Expression]

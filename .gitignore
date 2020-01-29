@@ -6,6 +6,7 @@ a.out
 syntax.bnf
 .idea
 tmp*
+.mypy_cache
 
 # とりあえず
 

@@ -1,12 +1,12 @@
 from typing import List, Union, Any
 from enum import Enum, auto
 from dataclasses import dataclass
-from string import whitespace, digits, hexdigits, ascii_letters
+from string import whitespace, digits, hexdigits, ascii_letters, ascii_lowercase
 import re
 
 
 number_literal_chars = set(digits + ascii_letters + '.')
-token_single = '+*;'
+token_single = '+*;' + ascii_lowercase
 
 
 class TokenType(Enum):

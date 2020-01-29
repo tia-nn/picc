@@ -28,6 +28,10 @@ class Typor:
             node.type = Int(size, signed, True, None, None)
             return node.type
 
+        if isinstance(node, node_type.Variable):
+            # variableValidateで見てる
+            return node.type
+
         if isinstance(node, node_type.Add):
             l_type = self.type(node.left)
             r_type = self.type(node.right)

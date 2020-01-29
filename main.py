@@ -3,6 +3,8 @@ from typing import List
 
 from nodor.parse import Nodor, ParseError
 from tokenor.tokenor import Tokenizer, TokenizeError
+from nodor.variable_validator import variable_validator
+from nodor.variable_validator.variable import NotExist
 from nodor.typor import typor
 from generator.generator import Generator, GenerateError
 
@@ -26,6 +28,7 @@ if __name__ == '__main__':
         except IndexError:
             stderr.write(f'{len(code)}: {e.args}')
         exit(1)
+    variable_validator.VariableValidator().crawl(node)
     typor.Typor().typing(node)
     Generator().generate(node)
 

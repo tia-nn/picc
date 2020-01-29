@@ -21,13 +21,28 @@ class Generator:
         print('mov rax, 60')
         print('syscall')
         print('main:')
+        print('push rsp')
+        print('mov rbp, rsp')
+        for i in range(26):
+            print(f'mov rax, {i}')
+            print('push rax')
         for node in nodes:
             self.gen(node)
+        print('leave')
         print('ret')
+
+    def gen_addr(self, node: node_type.Variable):
+        print(f'lea rax, [rbp - {node.offset}]')
+        return
 
     def gen(self, node: Node):
         if isinstance(node, node_type.Integer):
             print(f'mov rax, {node.value & 0xffffffffffffffff}')
+            return
+
+        if isinstance(node, node_type.Variable):
+            self.gen_addr(node)
+            print('mov rax, [rax]')
             return
 
         if isinstance(node, node_type.Add):
