@@ -5,10 +5,6 @@ from collections import Counter
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
-
-__all__ = ['storage_class', 'QUALIFIER', 'Type', 'Int']
-
-
 storage_class = namedtuple('storage_class', ('typedef', 'extern', 'static', 'thread_local', 'auto', 'register'))
 
 
@@ -83,15 +79,9 @@ class Qualifier(metaclass=ABCMeta):
         return ''
 
 
-class Align(metaclass=ABCMeta):
-    alignas: bool = False
-    type_name: str = None
-    constant_expression: 'Node' = None
-
-
-class Base(StorageClass, Qualifier, Align, metaclass=ABCMeta):
+class Base(StorageClass, Qualifier, metaclass=ABCMeta):
     size: int = None
-    is_literal_or_calc = False
+    is_literal_or_calc: bool = False
 
 
 class Arithmetic(Base, metaclass=ABCMeta):
@@ -100,7 +90,8 @@ class Arithmetic(Base, metaclass=ABCMeta):
 
 class Int(Arithmetic):
 
-    def __init__(self, size: int, signed: bool, is_literal_or_calc: bool, storage_classes: Optional[storage_class], qualifier: Optional[QUALIFIER], align: Optional[Union[str, 'Node']] = None):
+    def __init__(self, size: int, signed: bool, is_literal_or_calc: bool,
+                 storage_classes: Optional[storage_class], qualifier: Optional[QUALIFIER]):
         self.size = size
         self.signed = signed
         self.is_literal_or_calc = is_literal_or_calc
@@ -125,6 +116,3 @@ class Int(Arithmetic):
 
 
 Type = Union[Int]
-
-
-# from ..node import Node

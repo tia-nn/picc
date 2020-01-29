@@ -1,8 +1,7 @@
-from typing import Union, List
+from typing import List
 
-from .. import node as node_type
-from ..node import Node
-from .type import Int
+from .. import node as node_type, Node
+from ..type import Int
 
 
 class TypingError(Exception):

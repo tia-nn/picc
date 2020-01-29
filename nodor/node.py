@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Union
-from .typor.type import Int, Type
+from .type import Int, Type
 from abc import ABCMeta, abstractmethod
 
 
@@ -38,8 +38,8 @@ class Variable(BaseNode):
 
 @dataclass
 class BinaryOperator(BaseNode, metaclass=ABCMeta):
-    left: 'Node'
-    right: 'Node'
+    left: 'Expression'
+    right: 'Expression'
     type: 'Type' = None
 
     @property

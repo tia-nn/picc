@@ -3,7 +3,7 @@ from typing import List
 from crawler import Crawler
 from nodor import node as node_type
 from nodor.node import Node
-from .variable import Scope, NotExist
+from .scope import Scope, NotExist
 
 
 class VarNameError(NameError):

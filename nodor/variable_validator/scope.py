@@ -2,7 +2,7 @@ from typing import List, Deque
 from dataclasses import dataclass
 from collections import deque
 
-from ..typor.type import Type, Int, storage_class, QUALIFIER, Align
+from ..type import Type, Int, storage_class, QUALIFIER
 from ..node import Variable
 
 
@@ -21,7 +21,7 @@ class Scope:
         self.scope = deque()
         self.scope.append([])
         for i, v in enumerate(ascii_lowercase):
-            self.scope[0].append(Variable(0, v, (i + 1) * 8, Int(64, True, False, storage_class(False, False, False, False, True, False), None, None)))
+            self.scope[0].append(Variable(0, v, (i + 1) * 8, Int(64, True, False, storage_class(False, False, False, False, True, False), None)))
 
     def exist(self, name) -> Variable:
         for block in list(self.scope)[::-1]:

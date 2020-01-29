@@ -4,7 +4,7 @@ from typing import List
 from tokenor.tokenor import Tokenizer, TokenizeError
 from nodor import Nodor, ParseError
 from nodor import variable_validator
-from nodor.variable_validator.variable import NotExist
+from nodor.variable_validator.scope import NotExist
 from nodor import typor
 from generator import Generator, GenerateError
 
