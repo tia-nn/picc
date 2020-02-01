@@ -1,4 +1,4 @@
-from typing import List, Callable, TypeVar
+from typing import List, Callable, TypeVar, Generator, Any
 from contextlib import contextmanager
 from sys import stdout
 
@@ -10,19 +10,19 @@ T = TypeVar('T')
 
 
 @contextmanager
-def indent():
+def indent() -> Generator[None, None, None]:
     orig_write = stdout.write
 
-    def new_write(s: str):
+    def new_write(s: str) -> None:
         orig_write('    ' + s)
 
-    stdout.write = new_write
+    stdout.write = new_write  # type: ignore  # Cannot assign to a method
     yield
-    stdout.write = orig_write
+    stdout.write = orig_write  # type: ignore  # Cannot assign to a method
 
 
-def label(fn: T):
-    def wrap(*args, **kwargs):
+def label(fn: Callable[..., T]) -> Callable[..., T]:
+    def wrap(*args: Any, **kwargs: Any) -> T:
         print(f'; < {fn.__qualname__.split(".")[-1]} >')
         with indent():
             ret = fn(*args, *kwargs)
@@ -33,14 +33,14 @@ def label(fn: T):
 class GenerateError(ValueError):
     node: Node
 
-    def __init__(self, node, *args):
+    def __init__(self, node: Node, *args: str):
         super().__init__(*args)
         self.node = node
 
 
-class Generator(Crawler):
+class CodeGenerator(Crawler[None]):
 
-    def generate(self, nodes: List[Node]):
+    def generate(self, nodes: List[Node]) -> None:
         print('section .text')
         print('global _start')
         print('_start:')
@@ -61,20 +61,20 @@ class Generator(Crawler):
             print('ret')
 
     @label
-    def gen_addr(self, node: node_type.Variable):
+    def gen_addr(self, node: node_type.Variable) -> None:
         print(f'lea rax, [rbp - {node.offset}]')
         return
 
-    def gen(self, node: Node):
+    def gen(self, node: Node) -> None:
         return self.check(node)
 
     @label
-    def integer(self, node: node_type.Integer):
+    def integer(self, node: node_type.Integer) -> None:
         print(f'mov rax, {node.value & 0xffffffffffffffff}')
         return
 
     @label
-    def variable(self, node: node_type.Variable):
+    def variable(self, node: node_type.Variable) -> None:
         if node.type is None:
             raise GenerateError(node, 'type is None')
         self.gen_addr(node)
@@ -84,7 +84,7 @@ class Generator(Crawler):
         return
 
     @label
-    def assign(self, node: node_type.Assign):
+    def assign(self, node: node_type.Assign) -> None:
         if node.type is None:
             raise GenerateError(node, 'type is None')
         if node.left.type is None:
@@ -101,7 +101,7 @@ class Generator(Crawler):
         return
 
     @label
-    def add(self, node: node_type.Add):
+    def add(self, node: node_type.Add) -> None:
         self.gen(node.left)
         print('push rax')
         self.gen(node.right)
@@ -111,7 +111,7 @@ class Generator(Crawler):
         return
 
     @label
-    def mul(self, node: node_type.Mul):
+    def mul(self, node: node_type.Mul) -> None:
         self.gen(node.left)
         print('push rax')
         self.gen(node.right)

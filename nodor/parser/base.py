@@ -1,6 +1,6 @@
 from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar, Optional
 
-from tokenor import Token
+from tokenor import Token, TokenType
 from ..node import Node
 
 
@@ -10,7 +10,7 @@ T = TypeVar('T')
 class Unmatch(Exception):
     position: int
 
-    def __init__(self, position, info):
+    def __init__(self, position: int, info: str):
         super().__init__(info)
         self.position = position
 
@@ -18,12 +18,12 @@ class Unmatch(Exception):
 class ParseError(Exception):
     position: int
 
-    def __init__(self, position, info):
+    def __init__(self, position: int, info: str):
         super().__init__(info)
         self.position = position
 
 
-def unmatch_is_error(fn: Callable[[], T], info: str = None) -> T:
+def unmatch_is_error(fn: Callable[[], T], info: Optional[str] = None) -> T:
     try:
         return fn()
     except Unmatch as e:
@@ -51,7 +51,7 @@ class BaseParser(Base):
         except IndexError:
             raise Unmatch(self.p, 'token index out of range')
 
-    def consume(self, token_type) -> Optional[Token]:
+    def consume(self, token_type: Union[TokenType, str]) -> Optional[Token]:
         try:
             token = self.token()
         except Unmatch:
@@ -71,16 +71,4 @@ class BaseParser(Base):
 class TokenParser(Base):
     code: str
     p: int
-
-
-def saveposition(f: Callable[[Union[BaseParser, TokenParser]], Node]):
-    def wrap(self: Union[BaseParser, TokenParser], *args, **kwargs):
-        try:
-            p = self.p
-            ret = f(self)
-        except Unmatch as e:
-            self.p = p
-            raise e
-        return ret
-    return wrap
 

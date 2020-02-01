@@ -2,7 +2,7 @@ from typing import List, Union, Callable, Optional, Tuple
 import re
 
 from tokenor import Token, TokenType, Tokenizer
-from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError, unmatch_is_error
+from .base import BaseParser, TokenParser, Unmatch, ParseError, unmatch_is_error
 from ..node import *
 from .expression_parser import ExpressionParser
 

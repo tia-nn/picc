@@ -1,10 +1,10 @@
-from typing import List, Union, Callable, Optional, Tuple
+from typing import List, Union, Callable, Optional, Tuple, Dict
 from dataclasses import dataclass
 from string import hexdigits, octdigits, digits
 import re
 
 from tokenor import Token, TokenType, Tokenizer
-from .base import BaseParser, TokenParser, saveposition, Unmatch, ParseError, unmatch_is_error
+from .base import BaseParser, TokenParser, Unmatch, ParseError, unmatch_is_error
 from ..node import *
 
 integer_re = re.compile(r'^(?P<prefix>0[a-zA-Z]?)?(?P<value>[0-9a-fA-F]+)(?P<suffix>[a-zA-Z]+)?$')
@@ -15,7 +15,7 @@ number_suffix_re = re.compile(r'^(?P<suffix>[a-zA-Z]+)?$')
 
 class ExpressionParser(BaseParser):
 
-    def expression(self):
+    def expression(self) -> Expression:
         return self.assign()
 
     def assign(self) -> Expression:
@@ -58,7 +58,7 @@ class ExpressionParser(BaseParser):
 
 
 class NumberParser(TokenParser):
-    base: dict = {None: 10, '0x': 16, '0X': 16, '0': 8, '0o': 8, '0O': 8, '0b': 2, '0B': 2}
+    base: Dict[Optional[str], int] = {None: 10, '0x': 16, '0X': 16, '0': 8, '0o': 8, '0O': 8, '0b': 2, '0B': 2}
 
     def parse(self, token: Token, position: int) -> Number:
         return self.integer(token.value, position)

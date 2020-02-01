@@ -16,10 +16,10 @@ class Integer(BaseNode):
     suffix: str
     type: Optional[Int] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.type) + ' ' + str(self.value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
@@ -29,10 +29,10 @@ class Variable(BaseNode):
     offset: Optional[int] = None
     type: Optional[Type] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{str(self.type) if self.type is not None else "nonTyped"} {self.name}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
@@ -44,13 +44,13 @@ class BinaryOperator(BaseNode, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def _operator(self):
+    def _operator(self) -> str:
         raise NotImplementedError
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '((' + str(self.type) + ')' + str(self.left) + f' {self._operator} ' + str(self.right) + ')'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 

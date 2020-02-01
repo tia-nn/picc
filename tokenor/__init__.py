@@ -69,7 +69,7 @@ class Token:
     position: int
     value: Any = None
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         try:
             self.type
             return True
@@ -81,16 +81,15 @@ class TokenizeError(Exception):
     position: Optional[int] = None
     info: Optional[str] = None
 
-    def __init__(self, position, info):
-        super().__init__(self)
+    def __init__(self, position: int, *args: str) -> None:
+        super().__init__(args)
         self.position = position
-        self.info = info
 
 
 class Tokenizer:
 
     @staticmethod
-    def tokenize(code) -> List[Token]:
+    def tokenize(code: str) -> List[Token]:
         p = 0
         code_len = len(code)
         tokens: List[Token] = []

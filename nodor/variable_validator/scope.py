@@ -16,7 +16,7 @@ class NotExist(Exception):
 class Scope:
     scope: Deque[Block]
 
-    def __init__(self):
+    def __init__(self) -> None:
         from string import ascii_lowercase
         self.scope = deque()
         self.scope.append([])
@@ -24,7 +24,7 @@ class Scope:
         for i, v in enumerate(ascii_lowercase[1:]):
             self.scope[0].append(Variable(0, v*2, (i + 1) * 8 + 4, Int(64, True, False, storage_class(False, False, False, False, True, False), None)))
 
-    def exist(self, name) -> Variable:
+    def exist(self, name: str) -> Variable:
         for block in list(self.scope)[::-1]:
             if (v := self.is_exist(block, name)):
                 return v

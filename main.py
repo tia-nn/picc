@@ -6,7 +6,7 @@ from nodor import parse, ErrorReport
 from nodor import variable_validator
 from nodor.variable_validator.scope import NotExist
 from nodor import typor
-from generator import Generator, GenerateError
+from generator import CodeGenerator, GenerateError
 
 
 def code_index_to_row_col(code: str, index: int) -> Tuple[int, int]:
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         raw, col = code_index_to_row_col(code, e.code_index)
         stderr.write(f'{raw} : {col} : {", ".join(e.args)}')
         exit(1)
-    Generator().generate(node)
+    CodeGenerator().generate(node)
 
     # stderr.write(str(node))
 

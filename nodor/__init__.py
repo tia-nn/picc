@@ -9,7 +9,7 @@ from tokenor import Token
 class ErrorReport(ValueError):
     code_index: int
 
-    def __init__(self, code_index: int, *args):
+    def __init__(self, code_index: int, *args: str):
         super().__init__(*args)
         self.code_index = code_index
 

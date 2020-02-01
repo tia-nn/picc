@@ -25,7 +25,7 @@ class StorageClass(metaclass=ABCMeta):
     auto: bool = True
     register: bool = False
 
-    def set_storage_class(self, sc: storage_class):
+    def set_storage_class(self, sc: storage_class) -> None:
         self.typedef = sc.typedef
         self.extern = sc.extern
         self.static = sc.static
@@ -33,7 +33,7 @@ class StorageClass(metaclass=ABCMeta):
         self.auto = sc.auto
         self.register = sc.register
 
-    def __str__(self):
+    def __str__(self) -> str:
         typedef = 'typedef' if self.typedef else ''
         extern = 'extern' if self.extern else ''
         static = 'static' if self.static else ''
@@ -49,7 +49,7 @@ class Qualifier(metaclass=ABCMeta):
     volatile: bool = False
     atomic: bool = False
 
-    def set_qualifier(self, q: Optional[QUALIFIER]):
+    def set_qualifier(self, q: Optional[QUALIFIER]) -> None:
         if q == QUALIFIER.const:
             self.const = True
         elif q == QUALIFIER.restrict:
@@ -67,7 +67,7 @@ class Qualifier(metaclass=ABCMeta):
             return False
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.const:
             return 'const'
         if self.restrict:
@@ -83,25 +83,25 @@ class Base(StorageClass, Qualifier, metaclass=ABCMeta):
     size: Optional[int] = None
     is_literal_or_calc: bool = False
 
-    def ax(self):
+    def ax(self) -> str:
         if self.size == 64:
             return 'rax'
         if self.size == 32:
             return 'eax'
         if self.size == 16:
             return 'ax'
-        if self.size == '8':
+        if self.size == 8:
             return 'al'
         raise ValueError('unknown size')
 
-    def di(self):
+    def di(self) -> str:
         if self.size == 64:
             return 'rdi'
         if self.size == 32:
             return 'edi'
         if self.size == 16:
             return 'di'
-        if self.size == '8':
+        if self.size == 8:
             return 'dil'
         raise ValueError('unknown size')
 
@@ -123,7 +123,7 @@ class Int(Arithmetic):
             self.set_storage_class(storage_classes)
             self.set_qualifier(qualifier)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if not self.is_literal_or_calc:
             storage = StorageClass.__str__(self)
             qual = Qualifier.__str__(self)
@@ -135,7 +135,7 @@ class Int(Arithmetic):
 
         return ' '.join([i for i in (qual, storage, u + 'int' + size + '_t') if i])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
