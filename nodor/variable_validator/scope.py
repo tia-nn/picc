@@ -20,8 +20,9 @@ class Scope:
         from string import ascii_lowercase
         self.scope = deque()
         self.scope.append([])
-        for i, v in enumerate(ascii_lowercase):
-            self.scope[0].append(Variable(0, v, (i + 1) * 8, Int(64, True, False, storage_class(False, False, False, False, True, False), None)))
+        self.scope[0].append(Variable(0, 'a', 4, Int(32, True, False, storage_class(False, False, False, False, True, False), None)))
+        for i, v in enumerate(ascii_lowercase[1:]):
+            self.scope[0].append(Variable(0, v, (i + 1) * 8 + 4, Int(64, True, False, storage_class(False, False, False, False, True, False), None)))
 
     def exist(self, name) -> Variable:
         for block in list(self.scope)[::-1]:

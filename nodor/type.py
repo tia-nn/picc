@@ -49,7 +49,7 @@ class Qualifier(metaclass=ABCMeta):
     volatile: bool = False
     atomic: bool = False
 
-    def set_qualifier(self, q: QUALIFIER):
+    def set_qualifier(self, q: Optional[QUALIFIER]):
         if q == QUALIFIER.const:
             self.const = True
         elif q == QUALIFIER.restrict:
