@@ -1,2 +1,2 @@
-aa = 10;
-bb = aa;
+unsigned int int_a;
+a = 10;

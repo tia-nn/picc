@@ -19,7 +19,8 @@ if __name__ == '__main__':
     except TokenizeError as e:
         stderr.write(f'{e.position}: {e.args}')
         exit(1)
-    # print(token)
+    print(token)
+    exit(0)
     try:
         node = Nodor().parse(token)
     except ParseError as e:
