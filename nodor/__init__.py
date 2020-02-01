@@ -47,7 +47,7 @@ class Nodor(BaseParser):
     def mul(self) -> Expression:
         return self.binary_expression(self.primary_expression, '*', Mul)
 
-    def primary_expression(self) -> PrimaryExpression:
+    def primary_expression(self) -> Expression:
         return self.select(self.number, self.variable, self.bracket)
 
     def bracket(self) -> Expression:

@@ -33,7 +33,7 @@ def unmatch_is_error(fn: Callable[[], T], info: str = None) -> T:
 class Base:
     p: int
 
-    def select(self, *funcs: Callable[[], T]) -> T:
+    def select(self, *funcs: Callable[[], Node]) -> Node:
         for i in range(len(funcs)):
             try:
                 return funcs[i]()
@@ -61,9 +61,9 @@ class BaseParser(Base):
             return token
         return None
 
-    def binary_expression(self, fn: Callable[[], Node], token: str, nd: Callable[[int, Node, Node], Node]) -> Node:
+    def binary_expression(self, fn: Callable[[], Node], token_type: str, nd: Callable[[int, Node, Node], Node]) -> Node:
         result = fn()
-        while (token := self.consume(token)):
+        while (token := self.consume(token_type)):
             result = nd(self.p-1, result, unmatch_is_error(fn, 'no left operand'))
         return result
 

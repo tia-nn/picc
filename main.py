@@ -12,8 +12,8 @@ from generator import Generator, GenerateError
 if __name__ == '__main__':
     file_name = 'main.c'
     code = open(file_name).read()
-    node: List['Node'] = None
-    token: List['Token'] = None
+    node = None
+    token = None
     try:
         token = Tokenizer.tokenize(code)
     except TokenizeError as e:

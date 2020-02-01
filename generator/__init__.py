@@ -21,7 +21,7 @@ def indent():
     stdout.write = orig_write
 
 
-def label(fn: T) -> T:
+def label(fn: T):
     def wrap(*args, **kwargs):
         print(f'; < {fn.__qualname__.split(".")[-1]} >')
         with indent():
@@ -30,8 +30,12 @@ def label(fn: T) -> T:
     return wrap
 
 
-class GenerateError(Exception):
-    pass
+class GenerateError(ValueError):
+    node: Node
+
+    def __init__(self, node, *args):
+        super().__init__(*args)
+        self.node = node
 
 
 class Generator(Crawler):
@@ -71,6 +75,8 @@ class Generator(Crawler):
 
     @label
     def variable(self, node: node_type.Variable):
+        if node.type is None:
+            raise GenerateError(node, 'type is None')
         self.gen_addr(node)
         print('mov rdi, rax')
         print('xor eax, eax')
@@ -79,6 +85,12 @@ class Generator(Crawler):
 
     @label
     def assign(self, node: node_type.Assign):
+        if node.type is None:
+            raise GenerateError(node, 'type is None')
+        if node.left.type is None:
+            raise GenerateError(node.left, 'type is None')
+        if node.right.type is None:
+            raise GenerateError(node.right, 'type is None')
         self.gen(node.right)
         print('push rax')
         self.gen_addr(node.left)

@@ -1,4 +1,4 @@
-from typing import List, Union, Any
+from typing import List, Union, Any, Optional
 from enum import Enum, auto
 from dataclasses import dataclass
 from string import whitespace, digits, hexdigits, ascii_letters, ascii_lowercase
@@ -30,8 +30,8 @@ class Token:
 
 
 class TokenizeError(Exception):
-    position: int = None
-    info: str = None
+    position: Optional[int] = None
+    info: Optional[str] = None
 
     def __init__(self, position, info):
         super().__init__(self)

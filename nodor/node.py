@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Optional
 from .type import Int, Type
 from abc import ABCMeta, abstractmethod
 
@@ -14,7 +14,7 @@ class Integer(BaseNode):
     value: int
     prefix: str
     suffix: str
-    type: Int = None
+    type: Optional[Int] = None
 
     def __str__(self):
         return str(self.type) + ' ' + str(self.value)
@@ -26,8 +26,8 @@ class Integer(BaseNode):
 @dataclass
 class Variable(BaseNode):
     name: str
-    offset: int = None
-    type: Type = None
+    offset: Optional[int] = None
+    type: Optional[Type] = None
 
     def __str__(self):
         return f'{str(self.type) if self.type is not None else "nonTyped"} {self.name}'
@@ -36,11 +36,11 @@ class Variable(BaseNode):
         return str(self)
 
 
-@dataclass
+@dataclass  # type: ignore  # abs method in dataclass is invalid in mypy...
 class BinaryOperator(BaseNode, metaclass=ABCMeta):
     left: 'Expression'
     right: 'Expression'
-    type: Type = None
+    type: Optional[Type] = None
 
     @property
     @abstractmethod
@@ -69,7 +69,7 @@ class Assign(BinaryOperator):
     _operator: str = '='
 
 
-Node = Union[Integer, Add, Mul]
+Node = Union[Integer, Variable, Assign, Add, Mul]
 
 Number = Union[Integer]
 PrimaryExpression = Union[Number, Variable]

@@ -45,6 +45,8 @@ class Typor(Crawler):
         if isinstance(l_type, Int) and isinstance(r_type, Int):
             signed = l_type.signed or r_type.signed
             size = max(l_type.size, r_type.size)
+            if size is None:
+                raise TypingError(node, 'leaf node type.size is None')
             node.type = Int(size, signed, True, None, None)
             return node.type
 
@@ -57,6 +59,8 @@ class Typor(Crawler):
         if isinstance(l_type, Int) and isinstance(r_type, Int):
             signed = l_type.signed or r_type.signed
             size = max(l_type.size, r_type.size)
+            if size is None:
+                raise TypingError(node, 'leaf node type.size is None')
             node.type = Int(size, signed, True, None, None)
             return node.type
 

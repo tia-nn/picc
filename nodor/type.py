@@ -80,7 +80,7 @@ class Qualifier(metaclass=ABCMeta):
 
 
 class Base(StorageClass, Qualifier, metaclass=ABCMeta):
-    size: int = None
+    size: Optional[int] = None
     is_literal_or_calc: bool = False
 
     def ax(self):
@@ -118,6 +118,8 @@ class Int(Arithmetic):
         self.signed = signed
         self.is_literal_or_calc = is_literal_or_calc
         if not is_literal_or_calc:
+            if storage_classes is None:
+                raise ValueError('is_literal_or_calc is False but storage_classes or qualifier is None')
             self.set_storage_class(storage_classes)
             self.set_qualifier(qualifier)
 
