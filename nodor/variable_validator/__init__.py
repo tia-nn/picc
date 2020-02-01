@@ -7,11 +7,11 @@ from .scope import Scope, NotExist
 
 
 class VarNameError(NameError):
-    p: int
+    position: int
 
     def __init__(self, p, *args):
         super().__init__(*args)
-        self.p = p
+        self.position = p
 
 
 class VariableValidator(Crawler):

@@ -1,12 +1,27 @@
 from sys import argv, stderr
-from typing import List
+from typing import List, Tuple
 
 from tokenor import Tokenizer, TokenizeError
-from nodor import Nodor, ParseError
+from nodor import parse, ErrorReport
 from nodor import variable_validator
 from nodor.variable_validator.scope import NotExist
 from nodor import typor
 from generator import Generator, GenerateError
+
+
+def code_index_to_row_col(code: str, index: int) -> Tuple[int, int]:
+    raw: int = 1
+    col: int = 1
+
+    for i in range(index):
+        c = code[i]
+        if c == '\n':
+            raw += 1
+            col = 0
+        else:
+            col += 1
+
+    return raw, col
 
 
 if __name__ == '__main__':
@@ -19,20 +34,15 @@ if __name__ == '__main__':
     except TokenizeError as e:
         stderr.write(f'{e.position}: {e.args}')
         exit(1)
-    print(token)
-    exit(0)
+    # print(token)
+    # exit(0)
     try:
-        node = Nodor().parse(token)
-    except ParseError as e:
-        try:
-            stderr.write(f'{token[e.position].position}: {e.args}')
-        except IndexError:
-            stderr.write(f'{len(code)}: {e.args}')
+        node = parse(token)
+    except ErrorReport as e:
+        raw, col = code_index_to_row_col(code, e.code_index)
+        stderr.write(f'{raw} : {col} : {", ".join(e.args)}')
         exit(1)
-    variable_validator.VariableValidator().crawl(node)
-    typor.Typor().typing(node)
     Generator().generate(node)
-
 
     # stderr.write(str(node))
 

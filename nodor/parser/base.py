@@ -1,7 +1,7 @@
 from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar, Optional
 
 from tokenor import Token
-from .node import Node
+from ..node import Node
 
 
 T = TypeVar('T')
