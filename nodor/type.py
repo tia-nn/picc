@@ -83,6 +83,28 @@ class Base(StorageClass, Qualifier, metaclass=ABCMeta):
     size: int = None
     is_literal_or_calc: bool = False
 
+    def ax(self):
+        if self.size == 64:
+            return 'rax'
+        if self.size == 32:
+            return 'eax'
+        if self.size == 16:
+            return 'ax'
+        if self.size == '8':
+            return 'al'
+        raise ValueError('unknown size')
+
+    def di(self):
+        if self.size == 64:
+            return 'rdi'
+        if self.size == 32:
+            return 'edi'
+        if self.size == 16:
+            return 'di'
+        if self.size == '8':
+            return 'dil'
+        raise ValueError('unknown size')
+
 
 class Arithmetic(Base, metaclass=ABCMeta):
     signed: bool = True

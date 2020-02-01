@@ -30,30 +30,6 @@ def label(fn: T) -> T:
     return wrap
 
 
-def rax(size: int) -> str:
-    if size == 64:
-        return 'rax'
-    if size == 32:
-        return 'eax'
-    if size == 16:
-        return 'ax'
-    if size == '8':
-        return 'al'
-    raise ValueError('unknown size')
-
-
-def rdi(size: int) -> str:
-    if size == 64:
-        return 'rdi'
-    if size == 32:
-        return 'edi'
-    if size == 16:
-        return 'di'
-    if size == '8':
-        return 'dil'
-    raise ValueError('unknown size')
-
-
 class GenerateError(Exception):
     pass
 
@@ -98,7 +74,7 @@ class Generator(Crawler):
         self.gen_addr(node)
         print('mov rdi, rax')
         print('xor eax, eax')
-        print(f'mov {rax(node.type.size)}, [rdi]')
+        print(f'mov {node.type.ax()}, [rdi]')
         return
 
     @label
@@ -107,9 +83,9 @@ class Generator(Crawler):
         print('push rax')
         self.gen_addr(node.left)
         print('pop rdi')
-        print(f'mov [rax], {rdi(node.left.type.size)}')
+        print(f'mov [rax], {node.left.type.di()}')
         print('xor eax, eax')
-        print(f'mov {rax(node.left.type.size)}, {rdi(node.left.type.size)}')
+        print(f'mov {node.left.type.ax()}, {node.left.type.di()}')
         return
 
     @label
