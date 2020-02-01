@@ -14,7 +14,7 @@ class Integer(BaseNode):
     value: int
     prefix: str
     suffix: str
-    type: 'Int' = None
+    type: Int = None
 
     def __str__(self):
         return str(self.type) + ' ' + str(self.value)
@@ -27,7 +27,7 @@ class Integer(BaseNode):
 class Variable(BaseNode):
     name: str
     offset: int = None
-    type: 'Type' = None
+    type: Type = None
 
     def __str__(self):
         return f'{str(self.type) if self.type is not None else "nonTyped"} {self.name}'
@@ -40,7 +40,7 @@ class Variable(BaseNode):
 class BinaryOperator(BaseNode, metaclass=ABCMeta):
     left: 'Expression'
     right: 'Expression'
-    type: 'Type' = None
+    type: Type = None
 
     @property
     @abstractmethod
