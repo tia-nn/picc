@@ -36,7 +36,7 @@ class Nodor(BaseParser):
         result = self.add()
         while True:
             if (token := self.consume('=')):
-                result = Assign(self.p, result, unmatch_is_error(self.assign, 'no left operand'))
+                result = Assign(self.p-1, result, unmatch_is_error(self.assign, 'no left operand'))
                 continue
             break
         return result
@@ -66,10 +66,8 @@ class Nodor(BaseParser):
         raise Unmatch(self.p, 'not number')
 
     def variable(self) -> Variable:
-        from string import ascii_lowercase
-        for i in ascii_lowercase:
-            if self.consume(i):
-                return Variable(self.p, i)
+        if (token := self.consume(TokenType.IDENT)):
+            return Variable(self.p-1, token.value)
         raise Unmatch(self.p, 'not variable')
 
 

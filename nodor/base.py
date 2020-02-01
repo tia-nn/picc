@@ -1,4 +1,4 @@
-from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar
+from typing import List, Callable, Union, Sequence, Any, Generic, TypeVar, Optional
 
 from tokenor import Token
 from .node import Node
@@ -51,20 +51,20 @@ class BaseParser(Base):
         except IndexError:
             raise Unmatch(self.p, 'token index out of range')
 
-    def consume(self, token_type) -> Union[Token, bool]:
+    def consume(self, token_type) -> Optional[Token]:
         try:
             token = self.token()
         except Unmatch:
-            return False
+            return None
         if token.type == token_type:
             self.p += 1
             return token
-        return False
+        return None
 
     def binary_expression(self, fn: Callable[[], Node], token: str, nd: Callable[[int, Node, Node], Node]) -> Node:
         result = fn()
         while (token := self.consume(token)):
-            result = nd(self.p, result, unmatch_is_error(fn, 'no left operand'))
+            result = nd(self.p-1, result, unmatch_is_error(fn, 'no left operand'))
         return result
 
 

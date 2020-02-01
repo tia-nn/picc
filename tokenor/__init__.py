@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from string import whitespace, digits, hexdigits, ascii_letters, ascii_lowercase
 
 number_literal_chars = set(digits + ascii_letters + '.')
-token_single = '+*;=()' + ascii_lowercase
+token_single = '+*;=()'
+ident_first_chars = set(ascii_letters + '_')
+ident_chars = set(ascii_letters + '_' + digits)
 
 
 class TokenType(Enum):
     NUMBER = auto()
+    IDENT = auto()
     EOF = auto()
 
 
@@ -63,6 +66,15 @@ class Tokenizer:
                     num += c
                     p += 1
                 tokens.append(Token(TokenType.NUMBER, first_p, num))
+                continue
+
+            if c in ident_first_chars:
+                ide = ''
+                first_p = p
+                while p < code_len and (c := code[p]) in ident_chars:
+                    ide += c
+                    p += 1
+                tokens.append(Token(TokenType.IDENT, first_p, ide))
                 continue
 
             raise TokenizeError(p, f'unknown token char: {c}')
